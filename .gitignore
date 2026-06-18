@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.vite
+coverage
+dev-dist
+.playwright-mcp
+*.tsbuildinfo
+
+# deploy (исключён из VCS — механизм деплоя ещё меняется)
+deploy/
+Dockerfile
+docker-compose.yml
+.dockerignore
