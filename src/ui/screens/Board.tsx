@@ -71,10 +71,15 @@ export const Board = reatomComponent(() => {
 		if (!guessTurnActive) setConfirmEmptyPass(false)
 	}, [guessTurnActive])
 
-	if (!view) {
-		goTo('home')
-		return null
-	}
+	// Доска без партии: сетевой гость просто ждёт состояние от хоста (после «Новой игры» сперва
+	// приходит lobby, состояние — следом) — его не трогаем. В локальной/хост-игре доска без партии
+	// бессмысленна, уводим в меню. Навигацию держим в эффекте, а не в рендере: goTo меняет
+	// глобальный screenAtom, а мутировать стор во время рендера нельзя (даёт глитч-переходы).
+	useEffect(() => {
+		if (!view && mode !== 'guest') goTo('home')
+	}, [view, mode])
+
+	if (!view) return null
 
 	const team = view.currentTeam
 	const over = view.phase === 'over'

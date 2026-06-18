@@ -247,7 +247,11 @@ function handleHostMessage(msg: HostMessage) {
 				myTeamAtom.set(me.team)
 				myRoleAtom.set(me.role)
 			}
-			if (msg.started) goTo('board')
+			// На доску гостя переводит приход состояния (см. 'state' ниже) — там уже есть, что
+			// показать. По одному lobby переходить нельзя: состояние ещё в пути, доска оказалась бы
+			// пустой (view === null) и Board выкинул бы гостя в меню. Если состояние уже получено
+			// (повторный lobby во время партии), держим гостя на доске.
+			if (msg.started && remoteViewAtom() != null) goTo('board')
 			break
 		}
 		case 'state':
