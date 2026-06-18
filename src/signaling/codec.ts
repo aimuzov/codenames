@@ -12,13 +12,13 @@ import type { SignalDescription } from './types.ts'
  * QR заметно проще для сканирования камерой.
  */
 export function encodeSignal(desc: SignalDescription): string {
-  return base45Encode(deflateRaw(minifySdp(desc)))
+	return base45Encode(deflateRaw(minifySdp(desc)))
 }
 
 /** Декодирует строку обратно в WebRTC-сигнал. */
 export function decodeSignal(text: string): SignalDescription {
-  const trimmed = text.trim()
-  // Совместимость: голый минифицированный код (M~…) без сжатия.
-  if (isMinifiedSignal(trimmed)) return expandSdp(trimmed)
-  return expandSdp(inflateRaw(base45Decode(trimmed), { to: 'string' }))
+	const trimmed = text.trim()
+	// Совместимость: голый минифицированный код (M~…) без сжатия.
+	if (isMinifiedSignal(trimmed)) return expandSdp(trimmed)
+	return expandSdp(inflateRaw(base45Decode(trimmed), { to: 'string' }))
 }

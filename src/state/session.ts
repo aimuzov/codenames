@@ -1,15 +1,15 @@
 import { action, atom, computed } from '@reatom/core'
 import {
-  createGame,
-  reducer,
-  redactStateForRole,
-  type GameConfig,
-  type GameEvent,
-  type GameState,
-  type RedactedState,
-  type Role,
-  type Team,
-} from '../game/index.ts'
+	createGame,
+	reducer,
+	redactStateForRole,
+	type GameConfig,
+	type GameEvent,
+	type GameState,
+	type RedactedState,
+	type Role,
+	type Team,
+} from '@/game/index.ts'
 
 /**
  * Слой сессии. Три режима:
@@ -39,8 +39,8 @@ export const viewRoleAtom = atom<Role>('operative', 'viewRole')
  * Показывается в попапе передачи телефона. null — старт/добровольное завершение хода.
  */
 export const handoffReasonAtom = atom<{ word: string; type: 'neutral' | Team } | null>(
-  null,
-  'handoffReason',
+	null,
+	'handoffReason',
 )
 
 /**
@@ -57,19 +57,19 @@ export const isHostAtom = computed(() => modeAtom() !== 'guest', 'isHost')
 
 /** Что отображает UI. */
 export const viewAtom = computed<RedactedState | null>(() => {
-  if (modeAtom() === 'guest') return remoteViewAtom()
-  const game = gameAtom()
-  return game ? redactStateForRole(game, viewRoleAtom()) : null
+	if (modeAtom() === 'guest') return remoteViewAtom()
+	const game = gameAtom()
+	return game ? redactStateForRole(game, viewRoleAtom()) : null
 }, 'view')
 
 /** Счёт — из публичной информации (открытые карты + известный расклад 9/8). */
 export const scoreAtom = computed<Record<Team, number>>(() => {
-  const view = viewAtom()
-  if (!view) return { red: 0, blue: 0 }
-  const totalRed = view.startingTeam === 'red' ? 9 : 8
-  const totalBlue = view.startingTeam === 'blue' ? 9 : 8
-  const revealed = (team: Team) => view.cards.filter((c) => c.revealed && c.type === team).length
-  return { red: totalRed - revealed('red'), blue: totalBlue - revealed('blue') }
+	const view = viewAtom()
+	if (!view) return { red: 0, blue: 0 }
+	const totalRed = view.startingTeam === 'red' ? 9 : 8
+	const totalBlue = view.startingTeam === 'blue' ? 9 : 8
+	const revealed = (team: Team) => view.cards.filter((c) => c.revealed && c.type === team).length
+	return { red: totalRed - revealed('red'), blue: totalBlue - revealed('blue') }
 }, 'score')
 
 export const isOverAtom = computed(() => viewAtom()?.phase === 'over', 'isOver')
@@ -79,65 +79,65 @@ let intentSender: ((event: GameEvent) => void) | null = null
 let hostSubmit: ((senderId: string, event: GameEvent) => void) | null = null
 
 export function setIntentSender(fn: ((event: GameEvent) => void) | null) {
-  intentSender = fn
+	intentSender = fn
 }
 export function setHostSubmit(fn: ((senderId: string, event: GameEvent) => void) | null) {
-  hostSubmit = fn
+	hostSubmit = fn
 }
 
 /** Применяет событие к канону (только local/host). Возвращает true, если состояние есть. */
 export const applyEvent = action((event: GameEvent) => {
-  const game = gameAtom()
-  if (!game) return false
-  gameAtom.set(reducer(game, event, Date.now()))
-  return true
+	const game = gameAtom()
+	if (!game) return false
+	gameAtom.set(reducer(game, event, Date.now()))
+	return true
 }, 'applyEvent')
 
 /** Действие игрока из UI. Маршрутизируется по режиму. */
 const playerAction = (event: GameEvent) => {
-  const mode = modeAtom()
-  if (mode === 'guest') {
-    intentSender?.(event)
-  } else if (mode === 'host') {
-    hostSubmit?.('host', event) // хост — тоже игрок с id 'host'
-  } else {
-    applyEvent(event)
-  }
+	const mode = modeAtom()
+	if (mode === 'guest') {
+		intentSender?.(event)
+	} else if (mode === 'host') {
+		hostSubmit?.('host', event) // хост — тоже игрок с id 'host'
+	} else {
+		applyEvent(event)
+	}
 }
 
 export const startGame = action((config: GameConfig) => {
-  gameAtom.set(createGame(config))
-  viewRoleAtom.set('operative')
-  handoffReasonAtom.set(null)
+	gameAtom.set(createGame(config))
+	viewRoleAtom.set('operative')
+	handoffReasonAtom.set(null)
 }, 'startGame')
 
 export const giveClue = action((word: string, count: number) => {
-  playerAction({ type: 'GIVE_CLUE', word, count })
-  if (modeAtom() === 'local') viewRoleAtom.set('operative') // hot-seat: прячем ключ
+	playerAction({ type: 'GIVE_CLUE', word, count })
+	if (modeAtom() === 'local') viewRoleAtom.set('operative') // hot-seat: прячем ключ
 }, 'giveClue')
 
 export const revealCard = action((index: number) => {
-  const before = gameAtom()
-  playerAction({ type: 'REVEAL_CARD', index })
-  if (modeAtom() === 'local' && before?.phase === 'guess') {
-    const after = gameAtom()
-    const card = after?.cards[index]
-    const turnPassed = !!after && after.phase === 'clue' && after.currentTeam !== before.currentTeam
-    // Ход перешёл из-за неверной карты (чужая или нейтральная, не ассасин) — покажем её в попапе.
-    handoffReasonAtom.set(
-      turnPassed && card && card.type !== before.currentTeam && card.type !== 'assassin'
-        ? { word: card.word, type: card.type as 'neutral' | Team }
-        : null,
-    )
-    // Попап (передача хода / победа) откладываем до конца анимации открытия карты.
-    if (turnPassed || after?.phase === 'over') {
-      revealLockedAtom.set(true)
-      setTimeout(() => revealLockedAtom.set(false), REVEAL_POPUP_DELAY_MS)
-    }
-  }
+	const before = gameAtom()
+	playerAction({ type: 'REVEAL_CARD', index })
+	if (modeAtom() === 'local' && before?.phase === 'guess') {
+		const after = gameAtom()
+		const card = after?.cards[index]
+		const turnPassed = !!after && after.phase === 'clue' && after.currentTeam !== before.currentTeam
+		// Ход перешёл из-за неверной карты (чужая или нейтральная, не ассасин) — покажем её в попапе.
+		handoffReasonAtom.set(
+			turnPassed && card && card.type !== before.currentTeam && card.type !== 'assassin'
+				? { word: card.word, type: card.type as 'neutral' | Team }
+				: null,
+		)
+		// Попап (передача хода / победа) откладываем до конца анимации открытия карты.
+		if (turnPassed || after?.phase === 'over') {
+			revealLockedAtom.set(true)
+			setTimeout(() => revealLockedAtom.set(false), REVEAL_POPUP_DELAY_MS)
+		}
+	}
 }, 'revealCard')
 
 export const endTurn = action(() => {
-  handoffReasonAtom.set(null)
-  playerAction({ type: 'END_TURN' })
+	handoffReasonAtom.set(null)
+	playerAction({ type: 'END_TURN' })
 }, 'endTurn')

@@ -1,87 +1,87 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no"
-    />
-    <meta name="theme-color" content="#0f172a" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <!--
+	<head>
+		<meta charset="UTF-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no"
+		/>
+		<meta name="theme-color" content="#0f172a" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<!--
       Прогреваем кэш всеми вариантами логотипа ещё до загрузки JS, чтобы первый
       показ и смена по клику были мгновенными, без подгрузки по сети. Список
       должен совпадать с LOGOS в src/ui/components/Logo.tsx.
     -->
-    <link rel="preload" as="image" href="/logos/1.png" />
-    <link rel="preload" as="image" href="/logos/2.png" />
-    <link rel="preload" as="image" href="/logos/3.png" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Codenames" />
-    <title>Codenames</title>
-    <script>
-      // Тема до загрузки бандла: ставим .dark заранее, чтобы стартовый лоадер и
-      // первый кадр не вспыхивали белым в тёмной теме. Логику дублирует
-      // applyTheme() (src/state/theme.ts) — она же отработает после загрузки JS.
-      try {
-        var t = localStorage.getItem('codenames.theme')
-        var dark =
-          t === 'dark' ||
-          ((t === 'system' || !t) && matchMedia('(prefers-color-scheme: dark)').matches)
-        if (dark) document.documentElement.classList.add('dark')
-      } catch (e) {}
-    </script>
-    <style>
-      /* Стартовый лоадер: виден сразу (до загрузки бандла и монтирования React),
+		<link rel="preload" as="image" href="/logos/1.png" />
+		<link rel="preload" as="image" href="/logos/2.png" />
+		<link rel="preload" as="image" href="/logos/3.png" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="apple-mobile-web-app-title" content="Codenames" />
+		<title>Codenames</title>
+		<script>
+			// Тема до загрузки бандла: ставим .dark заранее, чтобы стартовый лоадер и
+			// первый кадр не вспыхивали белым в тёмной теме. Логику дублирует
+			// applyTheme() (src/state/theme.ts) — она же отработает после загрузки JS.
+			try {
+				var t = localStorage.getItem('codenames.theme')
+				var dark =
+					t === 'dark' ||
+					((t === 'system' || !t) && matchMedia('(prefers-color-scheme: dark)').matches)
+				if (dark) document.documentElement.classList.add('dark')
+			} catch (e) {}
+		</script>
+		<style>
+			/* Стартовый лоадер: виден сразу (до загрузки бандла и монтирования React),
          убирается из App.tsx после первого рендера. Цвета захардкожены под
          --background / --muted-foreground из src/index.css — переменных темы тут
          ещё нет, потому что index.css подключается вместе с бандлом. */
-      #initial-loader {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: oklch(1 0 0);
-        transition: opacity 200ms ease-out;
-      }
-      html.dark #initial-loader {
-        background: oklch(0.147 0.004 49.25);
-      }
-      #initial-loader.is-hiding {
-        opacity: 0;
-      }
-      #initial-loader .spinner {
-        width: 38px;
-        height: 38px;
-        border-radius: 50%;
-        border: 3px solid oklch(0.553 0.013 58.071 / 0.25);
-        border-top-color: oklch(0.553 0.013 58.071);
-        animation: initial-spin 0.7s linear infinite;
-      }
-      html.dark #initial-loader .spinner {
-        border-color: oklch(0.709 0.01 56.259 / 0.25);
-        border-top-color: oklch(0.709 0.01 56.259);
-      }
-      @keyframes initial-spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        #initial-loader .spinner {
-          animation-duration: 1.6s;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <div id="initial-loader"><div class="spinner"></div></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+			#initial-loader {
+				position: fixed;
+				inset: 0;
+				z-index: 9999;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background: oklch(1 0 0);
+				transition: opacity 200ms ease-out;
+			}
+			html.dark #initial-loader {
+				background: oklch(0.147 0.004 49.25);
+			}
+			#initial-loader.is-hiding {
+				opacity: 0;
+			}
+			#initial-loader .spinner {
+				width: 38px;
+				height: 38px;
+				border-radius: 50%;
+				border: 3px solid oklch(0.553 0.013 58.071 / 0.25);
+				border-top-color: oklch(0.553 0.013 58.071);
+				animation: initial-spin 0.7s linear infinite;
+			}
+			html.dark #initial-loader .spinner {
+				border-color: oklch(0.709 0.01 56.259 / 0.25);
+				border-top-color: oklch(0.709 0.01 56.259);
+			}
+			@keyframes initial-spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				#initial-loader .spinner {
+					animation-duration: 1.6s;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div id="root"></div>
+		<div id="initial-loader"><div class="spinner"></div></div>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
 </html>

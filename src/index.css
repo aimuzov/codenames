@@ -1,348 +1,369 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
 /* Прокрутка работает, но полоса скролла скрыта (Firefox + WebKit). */
 @utility no-scrollbar {
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-        display: none;
-    }
+	scrollbar-width: none;
+	&::-webkit-scrollbar {
+		display: none;
+	}
 }
 
 @theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
+	--font-heading: var(--font-sans);
+	--font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+	--color-sidebar-ring: var(--sidebar-ring);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar: var(--sidebar);
+	--color-chart-5: var(--chart-5);
+	--color-chart-4: var(--chart-4);
+	--color-chart-3: var(--chart-3);
+	--color-chart-2: var(--chart-2);
+	--color-chart-1: var(--chart-1);
+	--color-ring: var(--ring);
+	--color-input: var(--input);
+	--color-border: var(--border);
+	--color-destructive: var(--destructive);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-accent: var(--accent);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-muted: var(--muted);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-secondary: var(--secondary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-primary: var(--primary);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-popover: var(--popover);
+	--color-card-foreground: var(--card-foreground);
+	--color-card: var(--card);
+	--color-foreground: var(--foreground);
+	--color-background: var(--background);
 
-    /* Игровые семантические цвета (команды/типы карт) — работают в обеих темах */
-    --color-team-red: var(--team-red);
-    --color-team-red-foreground: var(--team-red-foreground);
-    --color-team-red-tint: var(--team-red-tint);
-    --color-team-red-tint-foreground: var(--team-red-tint-foreground);
-    --color-team-red-bright: var(--team-red-bright);
-    --color-team-blue: var(--team-blue);
-    --color-team-blue-foreground: var(--team-blue-foreground);
-    --color-team-blue-tint: var(--team-blue-tint);
-    --color-team-blue-tint-foreground: var(--team-blue-tint-foreground);
-    --color-team-blue-bright: var(--team-blue-bright);
-    --color-card-neutral: var(--card-neutral);
-    --color-card-neutral-foreground: var(--card-neutral-foreground);
-    --color-card-neutral-tint: var(--card-neutral-tint);
-    --color-card-neutral-tint-foreground: var(--card-neutral-tint-foreground);
-    --color-card-assassin: var(--card-assassin);
-    --color-card-assassin-foreground: var(--card-assassin-foreground);
-    --color-card-assassin-tint: var(--card-assassin-tint);
-    --color-card-assassin-tint-foreground: var(--card-assassin-tint-foreground);
+	/* Игровые семантические цвета (команды/типы карт) — работают в обеих темах */
+	--color-team-red: var(--team-red);
+	--color-team-red-foreground: var(--team-red-foreground);
+	--color-team-red-tint: var(--team-red-tint);
+	--color-team-red-tint-foreground: var(--team-red-tint-foreground);
+	--color-team-red-bright: var(--team-red-bright);
+	--color-team-blue: var(--team-blue);
+	--color-team-blue-foreground: var(--team-blue-foreground);
+	--color-team-blue-tint: var(--team-blue-tint);
+	--color-team-blue-tint-foreground: var(--team-blue-tint-foreground);
+	--color-team-blue-bright: var(--team-blue-bright);
+	--color-card-neutral: var(--card-neutral);
+	--color-card-neutral-foreground: var(--card-neutral-foreground);
+	--color-card-neutral-tint: var(--card-neutral-tint);
+	--color-card-neutral-tint-foreground: var(--card-neutral-tint-foreground);
+	--color-card-assassin: var(--card-assassin);
+	--color-card-assassin-foreground: var(--card-assassin-foreground);
+	--color-card-assassin-tint: var(--card-assassin-tint);
+	--color-card-assassin-tint-foreground: var(--card-assassin-tint-foreground);
 
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+	--radius-sm: calc(var(--radius) * 0.6);
+	--radius-md: calc(var(--radius) * 0.8);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) * 1.4);
+	--radius-2xl: calc(var(--radius) * 1.8);
+	--radius-3xl: calc(var(--radius) * 2.2);
+	--radius-4xl: calc(var(--radius) * 2.6);
 }
 
 :root {
-    --radius: 0.625rem;
+	--radius: 0.625rem;
 
-    /* shadcn — базовая палитра Stone (светлая) */
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.147 0.004 49.25);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.147 0.004 49.25);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.147 0.004 49.25);
-    --primary: oklch(0.216 0.006 56.043);
-    --primary-foreground: oklch(0.985 0.001 106.423);
-    --secondary: oklch(0.97 0.001 106.424);
-    --secondary-foreground: oklch(0.216 0.006 56.043);
-    --muted: oklch(0.97 0.001 106.424);
-    --muted-foreground: oklch(0.553 0.013 58.071);
-    --accent: oklch(0.97 0.001 106.424);
-    --accent-foreground: oklch(0.216 0.006 56.043);
-    --destructive: oklch(0.577 0.245 27.325);
-    /* Предупреждение (оранжевый) — для warning-тостов. Имена не --warning-*, чтобы не
+	/* shadcn — базовая палитра Stone (светлая) */
+	--background: oklch(1 0 0);
+	--foreground: oklch(0.147 0.004 49.25);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.147 0.004 49.25);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.147 0.004 49.25);
+	--primary: oklch(0.216 0.006 56.043);
+	--primary-foreground: oklch(0.985 0.001 106.423);
+	--secondary: oklch(0.97 0.001 106.424);
+	--secondary-foreground: oklch(0.216 0.006 56.043);
+	--muted: oklch(0.97 0.001 106.424);
+	--muted-foreground: oklch(0.553 0.013 58.071);
+	--accent: oklch(0.97 0.001 106.424);
+	--accent-foreground: oklch(0.216 0.006 56.043);
+	--destructive: oklch(0.577 0.245 27.325);
+	/* Предупреждение (оранжевый) — для warning-тостов. Имена не --warning-*, чтобы не
        пересечься с внутренними переменными sonner (он задаёт их на самом тостере). */
-    --toast-warn-bg: oklch(0.70 0.175 55);
-    --toast-warn-border: oklch(0.63 0.17 52);
-    --toast-warn-text: oklch(1 0 0);
-    --border: oklch(0.923 0.003 48.717);
-    --input: oklch(0.923 0.003 48.717);
-    --ring: oklch(0.709 0.01 56.259);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
-    --sidebar: oklch(0.985 0.001 106.423);
-    --sidebar-foreground: oklch(0.147 0.004 49.25);
-    --sidebar-primary: oklch(0.216 0.006 56.043);
-    --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-    --sidebar-accent: oklch(0.97 0.001 106.424);
-    --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
-    --sidebar-border: oklch(0.923 0.003 48.717);
-    --sidebar-ring: oklch(0.709 0.01 56.259);
+	--toast-warn-bg: oklch(0.7 0.175 55);
+	--toast-warn-border: oklch(0.63 0.17 52);
+	--toast-warn-text: oklch(1 0 0);
+	--border: oklch(0.923 0.003 48.717);
+	--input: oklch(0.923 0.003 48.717);
+	--ring: oklch(0.709 0.01 56.259);
+	--chart-1: oklch(0.646 0.222 41.116);
+	--chart-2: oklch(0.6 0.118 184.704);
+	--chart-3: oklch(0.398 0.07 227.392);
+	--chart-4: oklch(0.828 0.189 84.429);
+	--chart-5: oklch(0.769 0.188 70.08);
+	--sidebar: oklch(0.985 0.001 106.423);
+	--sidebar-foreground: oklch(0.147 0.004 49.25);
+	--sidebar-primary: oklch(0.216 0.006 56.043);
+	--sidebar-primary-foreground: oklch(0.985 0.001 106.423);
+	--sidebar-accent: oklch(0.97 0.001 106.424);
+	--sidebar-accent-foreground: oklch(0.216 0.006 56.043);
+	--sidebar-border: oklch(0.923 0.003 48.717);
+	--sidebar-ring: oklch(0.709 0.01 56.259);
 
-    /* Игровые цвета (светлая тема) */
-    --team-red: oklch(0.585 0.222 27.3);
-    --team-red-foreground: oklch(0.985 0 0);
-    --team-red-tint: oklch(0.93 0.05 27.3);
-    --team-red-tint-foreground: oklch(0.45 0.16 27.3);
-    /* Яркий вариант — точка открывшей команды (заметнее любого фона; обе темы). */
-    --team-red-bright: oklch(0.78 0.23 27.3);
-    --team-blue: oklch(0.55 0.17 256);
-    --team-blue-foreground: oklch(0.985 0 0);
-    --team-blue-tint: oklch(0.93 0.04 256);
-    --team-blue-tint-foreground: oklch(0.44 0.13 256);
-    --team-blue-bright: oklch(0.74 0.19 256);
-    --card-neutral: oklch(0.84 0.02 80);
-    --card-neutral-foreground: oklch(0.3 0.02 60);
-    --card-neutral-tint: oklch(0.94 0.012 80);
-    --card-neutral-tint-foreground: oklch(0.5 0.02 70);
-    --card-assassin: oklch(0.24 0.006 60);
-    --card-assassin-foreground: oklch(0.96 0.003 106);
-    --card-assassin-tint: oklch(0.30 0.006 60);
-    --card-assassin-tint-foreground: oklch(0.96 0.003 106);
+	/* Игровые цвета (светлая тема) */
+	--team-red: oklch(0.585 0.222 27.3);
+	--team-red-foreground: oklch(0.985 0 0);
+	--team-red-tint: oklch(0.93 0.05 27.3);
+	--team-red-tint-foreground: oklch(0.45 0.16 27.3);
+	/* Яркий вариант — точка открывшей команды (заметнее любого фона; обе темы). */
+	--team-red-bright: oklch(0.78 0.23 27.3);
+	--team-blue: oklch(0.55 0.17 256);
+	--team-blue-foreground: oklch(0.985 0 0);
+	--team-blue-tint: oklch(0.93 0.04 256);
+	--team-blue-tint-foreground: oklch(0.44 0.13 256);
+	--team-blue-bright: oklch(0.74 0.19 256);
+	--card-neutral: oklch(0.84 0.02 80);
+	--card-neutral-foreground: oklch(0.3 0.02 60);
+	--card-neutral-tint: oklch(0.94 0.012 80);
+	--card-neutral-tint-foreground: oklch(0.5 0.02 70);
+	--card-assassin: oklch(0.24 0.006 60);
+	--card-assassin-foreground: oklch(0.96 0.003 106);
+	--card-assassin-tint: oklch(0.3 0.006 60);
+	--card-assassin-tint-foreground: oklch(0.96 0.003 106);
 }
 
 .dark {
-    /* shadcn — базовая палитра Stone (тёмная) */
-    --background: oklch(0.147 0.004 49.25);
-    --foreground: oklch(0.985 0.001 106.423);
-    --card: oklch(0.216 0.006 56.043);
-    --card-foreground: oklch(0.985 0.001 106.423);
-    --popover: oklch(0.216 0.006 56.043);
-    --popover-foreground: oklch(0.985 0.001 106.423);
-    --primary: oklch(0.923 0.003 48.717);
-    --primary-foreground: oklch(0.216 0.006 56.043);
-    --secondary: oklch(0.268 0.007 34.298);
-    --secondary-foreground: oklch(0.985 0.001 106.423);
-    --muted: oklch(0.268 0.007 34.298);
-    --muted-foreground: oklch(0.709 0.01 56.259);
-    --accent: oklch(0.268 0.007 34.298);
-    --accent-foreground: oklch(0.985 0.001 106.423);
-    --destructive: oklch(0.704 0.191 22.216);
-    /* Предупреждение (оранжевый) — для warning-тостов (см. комментарий в :root). */
-    --toast-warn-bg: oklch(0.66 0.17 55);
-    --toast-warn-border: oklch(0.60 0.16 52);
-    --toast-warn-text: oklch(1 0 0);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.553 0.013 58.071);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.216 0.006 56.043);
-    --sidebar-foreground: oklch(0.985 0.001 106.423);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-    --sidebar-accent: oklch(0.268 0.007 34.298);
-    --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.553 0.013 58.071);
+	/* shadcn — базовая палитра Stone (тёмная) */
+	--background: oklch(0.147 0.004 49.25);
+	--foreground: oklch(0.985 0.001 106.423);
+	--card: oklch(0.216 0.006 56.043);
+	--card-foreground: oklch(0.985 0.001 106.423);
+	--popover: oklch(0.216 0.006 56.043);
+	--popover-foreground: oklch(0.985 0.001 106.423);
+	--primary: oklch(0.923 0.003 48.717);
+	--primary-foreground: oklch(0.216 0.006 56.043);
+	--secondary: oklch(0.268 0.007 34.298);
+	--secondary-foreground: oklch(0.985 0.001 106.423);
+	--muted: oklch(0.268 0.007 34.298);
+	--muted-foreground: oklch(0.709 0.01 56.259);
+	--accent: oklch(0.268 0.007 34.298);
+	--accent-foreground: oklch(0.985 0.001 106.423);
+	--destructive: oklch(0.704 0.191 22.216);
+	/* Предупреждение (оранжевый) — для warning-тостов (см. комментарий в :root). */
+	--toast-warn-bg: oklch(0.66 0.17 55);
+	--toast-warn-border: oklch(0.6 0.16 52);
+	--toast-warn-text: oklch(1 0 0);
+	--border: oklch(1 0 0 / 10%);
+	--input: oklch(1 0 0 / 15%);
+	--ring: oklch(0.553 0.013 58.071);
+	--chart-1: oklch(0.488 0.243 264.376);
+	--chart-2: oklch(0.696 0.17 162.48);
+	--chart-3: oklch(0.769 0.188 70.08);
+	--chart-4: oklch(0.627 0.265 303.9);
+	--chart-5: oklch(0.645 0.246 16.439);
+	--sidebar: oklch(0.216 0.006 56.043);
+	--sidebar-foreground: oklch(0.985 0.001 106.423);
+	--sidebar-primary: oklch(0.488 0.243 264.376);
+	--sidebar-primary-foreground: oklch(0.985 0.001 106.423);
+	--sidebar-accent: oklch(0.268 0.007 34.298);
+	--sidebar-accent-foreground: oklch(0.985 0.001 106.423);
+	--sidebar-border: oklch(1 0 0 / 10%);
+	--sidebar-ring: oklch(0.553 0.013 58.071);
 
-    /* Игровые цвета (тёмная тема) */
-    --team-red: oklch(0.62 0.21 27.3);
-    --team-red-foreground: oklch(0.985 0 0);
-    --team-red-tint: oklch(0.36 0.1 27.3);
-    --team-red-tint-foreground: oklch(0.9 0.06 27.3);
-    --team-blue: oklch(0.6 0.16 256);
-    --team-blue-foreground: oklch(0.985 0 0);
-    --team-blue-tint: oklch(0.36 0.09 256);
-    --team-blue-tint-foreground: oklch(0.9 0.05 256);
-    --card-neutral: oklch(0.55 0.02 80);
-    --card-neutral-foreground: oklch(0.96 0.005 106);
-    --card-neutral-tint: oklch(0.34 0.012 80);
-    --card-neutral-tint-foreground: oklch(0.85 0.012 80);
-    --card-assassin: oklch(0.2 0.006 60);
-    --card-assassin-foreground: oklch(0.96 0.003 106);
-    --card-assassin-tint: oklch(0.24 0.006 60);
-    --card-assassin-tint-foreground: oklch(0.92 0.006 60);
+	/* Игровые цвета (тёмная тема) */
+	--team-red: oklch(0.62 0.21 27.3);
+	--team-red-foreground: oklch(0.985 0 0);
+	--team-red-tint: oklch(0.36 0.1 27.3);
+	--team-red-tint-foreground: oklch(0.9 0.06 27.3);
+	--team-blue: oklch(0.6 0.16 256);
+	--team-blue-foreground: oklch(0.985 0 0);
+	--team-blue-tint: oklch(0.36 0.09 256);
+	--team-blue-tint-foreground: oklch(0.9 0.05 256);
+	--card-neutral: oklch(0.55 0.02 80);
+	--card-neutral-foreground: oklch(0.96 0.005 106);
+	--card-neutral-tint: oklch(0.34 0.012 80);
+	--card-neutral-tint-foreground: oklch(0.85 0.012 80);
+	--card-assassin: oklch(0.2 0.006 60);
+	--card-assassin-foreground: oklch(0.96 0.003 106);
+	--card-assassin-tint: oklch(0.24 0.006 60);
+	--card-assassin-tint-foreground: oklch(0.92 0.006 60);
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-    }
-  html,
-  body {
-    height: 100%;
-    overflow: hidden;            /* документ не скроллится — скролл только внутри Screen */
-    overscroll-behavior: none;   /* Chrome/Android + iOS 16.4+: убирает pull-to-refresh и scroll-chaining */
-    position: fixed;             /* iOS Safari: гасит rubber-band всей страницы на старых версиях */
-    inset: 0;
-    width: 100%;
-    touch-action: manipulation;  /* убирает double-tap-zoom и 300ms-задержку → нативнее тач */
-    @apply select-none;          /* запрет выделения текста, наследуется всем интерфейсом */
-    -webkit-touch-callout: none; /* iOS: убрать меню «Скопировать» по долгому нажатию */
-    }
-  input,
-  textarea,
-  [contenteditable="true"] {
-    @apply select-text;          /* поля ввода: выделение и копирование работают */
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
-  html {
-    @apply font-sans;
-    }
-  /* Оболочка приложения: прижимается к visualViewport из App.tsx (inline height + transform),
+	* {
+		@apply border-border outline-ring/50;
+	}
+	html,
+	body {
+		height: 100%;
+		overflow: hidden; /* документ не скроллится — скролл только внутри Screen */
+		overscroll-behavior: none; /* Chrome/Android + iOS 16.4+: убирает pull-to-refresh и scroll-chaining */
+		position: fixed; /* iOS Safari: гасит rubber-band всей страницы на старых версиях */
+		inset: 0;
+		width: 100%;
+		touch-action: manipulation; /* убирает double-tap-zoom и 300ms-задержку → нативнее тач */
+		@apply select-none; /* запрет выделения текста, наследуется всем интерфейсом */
+		-webkit-touch-callout: none; /* iOS: убрать меню «Скопировать» по долгому нажатию */
+	}
+	input,
+	textarea,
+	[contenteditable='true'] {
+		@apply select-text; /* поля ввода: выделение и копирование работают */
+	}
+	body {
+		@apply bg-background text-foreground;
+	}
+	html {
+		@apply font-sans;
+	}
+	/* Оболочка приложения: прижимается к visualViewport из App.tsx (inline height + transform),
      чтобы при клавиатуре видимая область не «уезжала». position:fixed делает её containing-block
      для absolute-оверлеев (композер). overflow НЕ режем: низ доски и так уходит под клавиатуру, а
      затемнению композера нужно вытечь за нижнюю кромку #root — иначе снизу остаётся светлая полоса
      (высота #root = visualViewport.height короче реально видимой зоны). Края экрана режет body. */
-  #root {
-    position: fixed;
-    inset: 0;
-    }
+	#root {
+		position: fixed;
+		inset: 0;
+	}
 }
 
 /* Анимация перехода между экранами (см. Screen.tsx + navDirectionAtom).
    Анимируется только возврат (back) — тело экрана въезжает слева; хедер статичен.
    Переход «вперёд» — без анимации (мгновенный). */
 @keyframes screen-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-10%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+	from {
+		opacity: 0;
+		transform: translateX(-10%);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
 }
 
 .screen-enter-back {
-  animation: screen-in-left 240ms ease-out;
+	animation: screen-in-left 240ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .screen-enter-back {
-    animation: none;
-  }
+	.screen-enter-back {
+		animation: none;
+	}
 }
 
 /* Дрожание чужой открытой карты (см. CardTile). */
 @keyframes card-shake {
-  0%, 100% { transform: translateX(0); }
-  15% { transform: translateX(-5px); }
-  30% { transform: translateX(4px); }
-  45% { transform: translateX(-3px); }
-  60% { transform: translateX(3px); }
-  75% { transform: translateX(-2px); }
-  90% { transform: translateX(1px); }
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	15% {
+		transform: translateX(-5px);
+	}
+	30% {
+		transform: translateX(4px);
+	}
+	45% {
+		transform: translateX(-3px);
+	}
+	60% {
+		transform: translateX(3px);
+	}
+	75% {
+		transform: translateX(-2px);
+	}
+	90% {
+		transform: translateX(1px);
+	}
 }
 
 .animate-card-shake {
-  animation: card-shake 500ms ease-in-out;
+	animation: card-shake 500ms ease-in-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-card-shake {
-    animation: none;
-  }
+	.animate-card-shake {
+		animation: none;
+	}
 }
 
 /* Скользящий блик: главный CTA (MenuButton accent) и приглашение капитана (ClueBar showInvite).
    Цвет блика — currentColor, поэтому подстраивается под фон каждого места. overflow:hidden слегка
    режет focus-ring — на тач-PWA приемлемо, рамка focus-visible остаётся видимой. */
 .btn-sheen {
-  position: relative;
-  overflow: hidden;
+	position: relative;
+	overflow: hidden;
 }
 
 .btn-sheen::after {
-  content: "";
-  position: absolute;
-  inset-block: 0;
-  left: -45%;
-  width: 32%;
-  background: linear-gradient(
-    100deg,
-    transparent,
-    color-mix(in oklch, currentColor 22%, transparent),
-    transparent
-  );
-  transform: skewX(-18deg);
-  animation: btn-sheen-sweep 3.5s ease-in-out infinite;
-  pointer-events: none;
+	content: '';
+	position: absolute;
+	inset-block: 0;
+	left: -45%;
+	width: 32%;
+	background: linear-gradient(
+		100deg,
+		transparent,
+		color-mix(in oklch, currentColor 22%, transparent),
+		transparent
+	);
+	transform: skewX(-18deg);
+	animation: btn-sheen-sweep 3.5s ease-in-out infinite;
+	pointer-events: none;
 }
 
 @keyframes btn-sheen-sweep {
-  0% { left: -45%; }
-  35% { left: 125%; }
-  100% { left: 125%; }
+	0% {
+		left: -45%;
+	}
+	35% {
+		left: 125%;
+	}
+	100% {
+		left: 125%;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn-sheen::after {
-    animation: none;
-    display: none;
-  }
+	.btn-sheen::after {
+		animation: none;
+		display: none;
+	}
 }
 
 /* Волна от точки касания (см. RippleButton). Позиция и размер задаются инлайн-стилями. */
 .ripple-ink {
-  position: absolute;
-  border-radius: 9999px;
-  pointer-events: none;
-  transform: translate(-50%, -50%) scale(0);
-  background: color-mix(in oklch, currentColor 25%, transparent);
-  animation: ripple-ink-expand 600ms ease-out forwards;
+	position: absolute;
+	border-radius: 9999px;
+	pointer-events: none;
+	transform: translate(-50%, -50%) scale(0);
+	background: color-mix(in oklch, currentColor 25%, transparent);
+	animation: ripple-ink-expand 600ms ease-out forwards;
 }
 
 @keyframes ripple-ink-expand {
-  to {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0;
-  }
+	to {
+		transform: translate(-50%, -50%) scale(1);
+		opacity: 0;
+	}
 }
 
 /* Описание warning-тоста наследует белый текст: sonner по умолчанию красит его серым,
    на оранжевом фоне он нечитаем. !important перебивает жёстко заданный цвет из sonner. */
-[data-sonner-toast][data-type="warning"] [data-description] {
-  color: inherit !important;
+[data-sonner-toast][data-type='warning'] [data-description] {
+	color: inherit !important;
 }
 
 /* Иконка warning-тоста крупнее: sonner зажимает контейнер [data-icon] в 16×16,
    поэтому раздвигаем его под увеличенный svg (size-8 = 2rem). */
-[data-sonner-toast][data-type="warning"] [data-icon] {
-  width: 2rem !important;
-  height: 2rem !important;
+[data-sonner-toast][data-type='warning'] [data-icon] {
+	width: 2rem !important;
+	height: 2rem !important;
 }

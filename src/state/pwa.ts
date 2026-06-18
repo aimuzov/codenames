@@ -16,29 +16,29 @@ let registration: ServiceWorkerRegistration | undefined
 // registerType: 'autoUpdate' сам активирует новую версию и перезагрузит страницу, когда найдёт её.
 // В dev сервис-воркер отключён (devOptions.enabled: false), поэтому здесь это no-op.
 const updateSW = registerSW({
-  immediate: true,
-  onRegisteredSW(_swUrl, r) {
-    registration = r
-  },
+	immediate: true,
+	onRegisteredSW(_swUrl, r) {
+		registration = r
+	},
 })
 
 /** Принудительно проверяет обновление приложения и применяет его, если найдено. */
 export const checkForUpdate = action(async () => {
-  updateStatusAtom.set('checking')
-  const toastId = toast.loading('Проверяю обновление…')
-  try {
-    await registration?.update()
-    // Новый воркер уже устанавливается/ждёт → активируем его и перезагружаемся.
-    if (registration?.installing || registration?.waiting) {
-      updateStatusAtom.set('updating')
-      toast.loading('Найдено обновление, перезагружаю…', { id: toastId })
-      await updateSW(true)
-    } else {
-      toast.success('Установлена последняя версия', { id: toastId })
-      updateStatusAtom.set('idle')
-    }
-  } catch {
-    toast.error('Не удалось проверить обновление', { id: toastId })
-    updateStatusAtom.set('idle')
-  }
+	updateStatusAtom.set('checking')
+	const toastId = toast.loading('Проверяю обновление…')
+	try {
+		await registration?.update()
+		// Новый воркер уже устанавливается/ждёт → активируем его и перезагружаемся.
+		if (registration?.installing || registration?.waiting) {
+			updateStatusAtom.set('updating')
+			toast.loading('Найдено обновление, перезагружаю…', { id: toastId })
+			await updateSW(true)
+		} else {
+			toast.success('Установлена последняя версия', { id: toastId })
+			updateStatusAtom.set('idle')
+		}
+	} catch {
+		toast.error('Не удалось проверить обновление', { id: toastId })
+		updateStatusAtom.set('idle')
+	}
 }, 'checkForUpdate')
