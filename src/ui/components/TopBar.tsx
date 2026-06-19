@@ -1,7 +1,32 @@
+import { reatomComponent } from '@reatom/react'
 import type { ReactNode } from 'react'
 import { ArrowLeft, Settings } from 'lucide-react'
+import { hasUnseenChangelogAtom } from '@/state/changelog.ts'
 import { goTo } from '@/state/ui.ts'
 import { RippleButton } from './RippleButton.tsx'
+
+/** Кнопка настроек с точкой-индикатором непрочитанного журнала изменений. */
+const SettingsButton = reatomComponent(() => {
+	const hasUnseen = hasUnseenChangelogAtom()
+	return (
+		<span className="relative inline-flex">
+			<RippleButton
+				variant="outline"
+				size="icon"
+				onClick={() => goTo('settings')}
+				aria-label={hasUnseen ? 'Настройки (есть новое)' : 'Настройки'}
+			>
+				<Settings className="transition-transform duration-300 ease-out group-hover/button:rotate-45 group-active/button:rotate-90" />
+			</RippleButton>
+			{hasUnseen && (
+				<span
+					aria-hidden
+					className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-primary ring-2 ring-background"
+				/>
+			)}
+		</span>
+	)
+}, 'SettingsButton')
 
 interface Props {
 	/** Заголовок экрана. Строка рендерится как `<h1>`; узел — как есть. Не задан — пропускается. */
@@ -32,16 +57,7 @@ export function TopBar({ title, onBack, right, showSettings = true }: Props) {
 			{(right || showSettings) && (
 				<div className="ml-auto flex shrink-0 items-center gap-2">
 					{right}
-					{showSettings && (
-						<RippleButton
-							variant="outline"
-							size="icon"
-							onClick={() => goTo('settings')}
-							aria-label="Настройки"
-						>
-							<Settings className="transition-transform duration-300 ease-out group-hover/button:rotate-45 group-active/button:rotate-90" />
-						</RippleButton>
-					)}
+					{showSettings && <SettingsButton />}
 				</div>
 			)}
 		</header>

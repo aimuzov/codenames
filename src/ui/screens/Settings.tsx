@@ -1,6 +1,6 @@
 import { reatomComponent } from '@reatom/react'
 import type { ReactNode } from 'react'
-import { Monitor, Moon, RefreshCw, Sun, TimerOff } from 'lucide-react'
+import { ChevronRight, Monitor, Moon, RefreshCw, Sun, TimerOff } from 'lucide-react'
 import {
 	CARD_WORD_SIZES,
 	type CardWordSize,
@@ -16,8 +16,11 @@ import {
 } from '@/state/settings.ts'
 import { APP_VERSION, BUILD_TIME, checkForUpdate, updateStatusAtom } from '@/state/pwa.ts'
 import { setTheme, themeAtom, type ThemeMode } from '@/state/theme.ts'
-import { goBack } from '@/state/ui.ts'
+import { goBack, goTo } from '@/state/ui.ts'
+import { LATEST } from '@/data/changelog.ts'
+import { hasUnseenChangelogAtom } from '@/state/changelog.ts'
 import { previewSound } from '@/audio/sfx.ts'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -54,6 +57,7 @@ export const Settings = reatomComponent(() => {
 	const hideRevealedWords = hideRevealedWordsAtom()
 	const theme = themeAtom()
 	const updateStatus = updateStatusAtom()
+	const hasUnseen = hasUnseenChangelogAtom()
 
 	// Подтверждение при включении звука.
 	const onSound = (v: boolean) => {
@@ -173,6 +177,36 @@ export const Settings = reatomComponent(() => {
 						checked={hideRevealedWords}
 						onCheckedChange={(v) => setHideRevealedWords(v)}
 					/>
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardContent className="flex flex-col gap-3">
+					<div className="flex items-center gap-2">
+						<SectionTitle>Что нового</SectionTitle>
+						{hasUnseen && (
+							<Badge className="h-4 px-1.5 text-[10px] leading-none uppercase tracking-wide">
+								новое
+							</Badge>
+						)}
+					</div>
+					<div className="flex flex-col gap-1">
+						<div className="flex items-center gap-2">
+							<span className="text-sm font-medium">{LATEST.title}</span>
+							<Badge variant="outline" className="h-4 px-1.5 text-[10px] leading-none">
+								{LATEST.version}
+							</Badge>
+						</div>
+						<span className="text-xs text-muted-foreground">{LATEST.highlight}</span>
+					</div>
+					<Button
+						variant="outline"
+						className="w-full justify-between"
+						onClick={() => goTo('changelog')}
+					>
+						<span>Весь список изменений</span>
+						<ChevronRight className="opacity-60" />
+					</Button>
 				</CardContent>
 			</Card>
 

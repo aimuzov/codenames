@@ -22,6 +22,7 @@ export type Screen =
 	| 'join'
 	| 'settings'
 	| 'stats'
+	| 'changelog'
 
 export const screenAtom = atom<Screen>('home', 'screen')
 

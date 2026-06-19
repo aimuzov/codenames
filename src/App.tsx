@@ -14,6 +14,7 @@ import { AddPlayer } from './ui/screens/AddPlayer.tsx'
 import { Join } from './ui/screens/Join.tsx'
 import { Settings } from './ui/screens/Settings.tsx'
 import { Stats } from './ui/screens/Stats.tsx'
+import { Changelog } from './ui/screens/Changelog.tsx'
 
 function screenView(screen: Screen) {
 	switch (screen) {
@@ -39,6 +40,8 @@ function screenView(screen: Screen) {
 			return <Settings />
 		case 'stats':
 			return <Stats />
+		case 'changelog':
+			return <Changelog />
 		default:
 			return <Home />
 	}
