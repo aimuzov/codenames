@@ -15,8 +15,8 @@
 	import Screen from '#frontend/components/screen.svelte'
 	import TopBar from '#frontend/components/top-bar.svelte'
 	import Button from '#frontend/components/ui/button.svelte'
-	import Card from '#frontend/components/ui/card.svelte'
-	import Input from '#frontend/components/ui/input.svelte'
+	import Card from '@aimuzov/infra-site-kit/ui/card.svelte'
+	import Input from '@aimuzov/infra-site-kit/ui/input.svelte'
 	import { randomName } from '#frontend/data/names.ts'
 	import {
 		connStatusAtom,

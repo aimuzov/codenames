@@ -106,6 +106,44 @@
 	color-scheme: dark;
 }
 
+/*
+ * Палитра для карточки и поля из infra-site-kit/ui: они читают только свои --ui-*.
+ * Объявлены на каждом корне темы, чтобы светлый островок внутри тёмной страницы
+ * пересчитал их от своих токенов, а не унаследовал тёмные.
+ */
+:root,
+.light,
+.dark {
+	--ui-fg: var(--foreground);
+	--ui-muted: var(--muted-foreground);
+	--ui-focus: var(--ring);
+	--ui-ring: color-mix(in oklch, var(--ring) 50%, transparent);
+	--ui-font-mono: ui-monospace, monospace;
+
+	--ui-card-bg: var(--card);
+	--ui-card-fg: var(--card-foreground);
+	--ui-card-border: none;
+	--ui-card-shadow: 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
+	--ui-card-radius: var(--radius-xl);
+	--ui-card-padding: 1rem;
+	--ui-card-padding-narrow: 1rem;
+	--ui-card-gap: 0.75rem;
+
+	--ui-input-height: 2.75rem;
+	--ui-input-radius: var(--radius-lg);
+	--ui-input-border: var(--input);
+	--ui-input-bg: transparent;
+}
+
+/* На тёмном поле чуть светлее фона, как в shadcn. */
+.dark {
+	--ui-input-bg: color-mix(in oklch, var(--input) 30%, transparent);
+}
+
+.dark .light {
+	--ui-input-bg: transparent;
+}
+
 *,
 *::before,
 *::after {

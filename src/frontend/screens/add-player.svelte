@@ -4,7 +4,7 @@
 	import SectionTitle from '#frontend/components/net/section-title.svelte'
 	import Screen from '#frontend/components/screen.svelte'
 	import TopBar from '#frontend/components/top-bar.svelte'
-	import Card from '#frontend/components/ui/card.svelte'
+	import Card from '@aimuzov/infra-site-kit/ui/card.svelte'
 	import { acceptGuestOffer, joinedConnIdsAtom } from '#frontend/state/net.ts'
 	import { goBack } from '#frontend/state/ui.ts'
 
