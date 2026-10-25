@@ -13,7 +13,7 @@
 	import Screen from '#frontend/components/screen.svelte'
 	import TopBar from '#frontend/components/top-bar.svelte'
 	import Button from '#frontend/components/ui/button.svelte'
-	import Card from '#frontend/components/ui/card.svelte'
+	import Card from '@aimuzov/infra-site-kit/ui/card.svelte'
 	import Dialog from '#frontend/components/ui/dialog.svelte'
 	import {
 		HOST_ID,

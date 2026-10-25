@@ -14,7 +14,7 @@
 	import TopBar from '#frontend/components/top-bar.svelte'
 	import Badge from '#frontend/components/ui/badge.svelte'
 	import Button from '#frontend/components/ui/button.svelte'
-	import Card from '#frontend/components/ui/card.svelte'
+	import Card from '@aimuzov/infra-site-kit/ui/card.svelte'
 	import Switch from '#frontend/components/ui/switch.svelte'
 	import { LATEST } from '#frontend/data/changelog.ts'
 	import { hasUnseenChangelogAtom } from '#frontend/state/changelog.ts'
