@@ -30,8 +30,24 @@ services:
     image: codenames-relay
     container_name: codenames-relay
     restart: unless-stopped
+    # TURN_SECRET and TURN_URLS: the relay hands out voice chat TURN credentials.
+    env_file: ../.env
     networks:
       - edge
+    logging: *logging
+
+  # TURN for the voice chat: phones behind carrier NAT can't reach each other directly.
+  # The one service here that publishes ports, and with host networking at that: Docker's
+  # proxy for a range of UDP relay ports would cost more than the audio itself.
+  turn:
+    image: coturn/coturn:4.18.0-alpine
+    container_name: codenames-turn
+    restart: unless-stopped
+    network_mode: host
+    env_file: ../.env
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+    entrypoint: ['sh', '-c', 'exec turnserver -c /etc/coturn/turnserver.conf --static-auth-secret="$$TURN_SECRET"']
     logging: *logging
 
 # Переменные сборки лежат в /srv/codenames/.env, образец в .env.example.

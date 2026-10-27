@@ -1,6 +1,7 @@
 import { createServer } from 'node:http'
 import { WebSocketServer, type WebSocket } from 'ws'
 
+import { iceServers, turnConfigFromEnv } from '#backend/turn.ts'
 import {
 	isRoomCode,
 	normalizeRoomCode,
@@ -24,6 +25,9 @@ const ROOM_TTL_MS = 30 * 60 * 1000
 const SWEEP_MS = 60 * 1000
 const MAX_ROOMS = 500
 const MAX_MESSAGE_BYTES = 256 * 1024
+const TURN = turnConfigFromEnv()
+/** How the host is addressed in voice signaling: same as HOST_ID on the client. */
+const HOST_ID = 'host'
 
 type Room = {
 	code: string
@@ -74,6 +78,7 @@ function openRoom(ws: WebSocket, requested?: string) {
 	rooms.set(code, room)
 	membership.set(ws, { room, id: null })
 	send(ws, { t: 'hosting', code })
+	send(ws, { t: 'ice', servers: iceServers(TURN, HOST_ID) })
 
 	// Гости, ждавшие возвращения хоста, представятся заново
 	// (см. ws-relay.ts: `host-online` → open → `hello`).
@@ -97,6 +102,7 @@ function joinRoom(ws: WebSocket, rawCode: string, id: string) {
 	room.guests.set(id, ws)
 	membership.set(ws, { room, id })
 	send(ws, { t: 'joined', code: room.code })
+	send(ws, { t: 'ice', servers: iceServers(TURN, id) })
 	send(ws, { t: 'host-online', online: room.host !== null })
 
 	if (room.host) send(room.host, { t: 'peer', id, online: true })
@@ -117,6 +123,21 @@ function route(ws: WebSocket, msg: Extract<RelayIn, { t: 'to' }>) {
 	} else if (room.host) {
 		send(room.host, { t: 'from', from: id, data: msg.data })
 	}
+}
+
+/**
+ * Voice chat is a mesh, so unlike game messages signaling goes between guests too.
+ * Strangers can't be reached: the target is looked up only within the sender's room.
+ */
+function routeVoice(ws: WebSocket, msg: Extract<RelayIn, { t: 'voice' }>) {
+	const seat = membership.get(ws)
+
+	if (!seat) return
+
+	const { room, id } = seat
+	const target = msg.to === HOST_ID ? room.host : room.guests.get(msg.to)
+
+	if (target && target !== ws) send(target, { t: 'voice', from: id ?? HOST_ID, data: msg.data })
 }
 
 function leave(ws: WebSocket) {
@@ -190,6 +211,9 @@ wss.on('connection', (ws) => {
 				break
 			case 'to':
 				route(ws, msg)
+				break
+			case 'voice':
+				routeVoice(ws, msg)
 				break
 			default:
 				send(ws, { t: 'error', reason: 'bad-message' })

@@ -9,7 +9,9 @@ import { mobileCtx } from './helpers/net'
  */
 
 async function openPeers(browser: Browser, n: number) {
-	const ctxs = await Promise.all(Array.from({ length: n }, () => browser.newContext(mobileCtx)))
+	const ctxs = await Promise.all(
+		Array.from({ length: n }, () => browser.newContext({ ...mobileCtx, permissions: ['microphone'] })),
+	)
 	const pages = await Promise.all(ctxs.map((c) => c.newPage()))
 
 	return { ctxs, pages }
@@ -38,6 +40,13 @@ async function joinRoom(guest: Page, code: string) {
 	await guest.getByRole('textbox').fill(code)
 	await guest.getByRole('button', { name: 'Войти' }).click()
 	await expect(guest.getByText('Подключено ✓')).toBeVisible({ timeout: 20_000 })
+}
+
+type VoiceStat = { id: string; state: RTCPeerConnectionState; receiving: boolean }
+
+/** Voice mesh connections of a page, via the e2e hook in state/voice.ts. */
+function voiceStats(page: Page): Promise<VoiceStat[]> {
+	return page.evaluate(() => (window as unknown as { __e2eVoice: () => VoiceStat[] }).__e2eVoice())
 }
 
 /** Имитация сна устройства: сеть пропадает, затем возвращается. */
@@ -97,6 +106,37 @@ test.describe('онлайн-режим (релей)', () => {
 			await expect(host!.getByTestId('room-code')).toHaveText(code, { timeout: 30_000 })
 			await expect(guest!.getByText('Подключено ✓')).toBeVisible({ timeout: 30_000 })
 			await expect(host!.getByRole('listitem')).toHaveCount(2)
+		} finally {
+			await Promise.all(ctxs.map((c) => c.close()))
+		}
+	})
+
+	test('голосовой чат: оба слышат друг друга, мьют и выход видны в составе', async ({ browser }) => {
+		const { ctxs, pages } = await openPeers(browser, 2)
+		const [host, guest] = pages
+
+		try {
+			const code = await hostRoom(host!)
+
+			await joinRoom(guest!, code)
+			await host!.getByRole('button', { name: 'Войти в голосовой чат' }).click()
+			await guest!.getByRole('button', { name: 'Войти в голосовой чат' }).click()
+
+			// Each side hears the other: the connection is up and the remote track is attached.
+			for (const page of [host!, guest!]) {
+				await expect
+					.poll(() => voiceStats(page), { timeout: 20_000 })
+					.toEqual([expect.objectContaining({ state: 'connected', receiving: true })])
+			}
+
+			await expect(host!.getByTestId('voice-live')).toHaveCount(2)
+
+			await guest!.getByRole('button', { name: 'Выключить микрофон' }).click()
+			await expect(host!.getByTestId('voice-muted')).toHaveCount(1)
+
+			await guest!.getByRole('button', { name: 'Выйти из голосового чата' }).click()
+			await expect(host!.getByTestId('voice-live')).toHaveCount(1)
+			await expect.poll(() => voiceStats(host!), { timeout: 15_000 }).toEqual([])
 		} finally {
 			await Promise.all(ctxs.map((c) => c.close()))
 		}
