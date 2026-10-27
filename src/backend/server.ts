@@ -1,6 +1,7 @@
 import { createServer } from 'node:http'
 import { WebSocketServer, type WebSocket } from 'ws'
 
+import { clientIp, createLimits } from '#backend/limits.ts'
 import { iceServers, turnConfigFromEnv } from '#backend/turn.ts'
 import {
 	isRoomCode,
@@ -26,6 +27,8 @@ const SWEEP_MS = 60 * 1000
 const MAX_ROOMS = 500
 const MAX_MESSAGE_BYTES = 256 * 1024
 const TURN = turnConfigFromEnv()
+/** Set in prod, where Caddy is the only way in: then the client address is in X-Forwarded-For. */
+const TRUST_PROXY = process.env.TRUST_PROXY === '1'
 /** How the host is addressed in voice signaling: same as HOST_ID on the client. */
 const HOST_ID = 'host'
 
@@ -38,11 +41,25 @@ type Room = {
 }
 
 const rooms = new Map<string, Room>()
+const limits = createLimits()
+/** Client address per socket: TURN credentials are rationed per address, not per player id. */
+const addresses = new WeakMap<WebSocket, string>()
 /** Обратный индекс: по сокету понимаем, кого отцеплять при закрытии. */
 const membership = new WeakMap<WebSocket, { room: Room; id: string | null }>()
 
 function send(ws: WebSocket, msg: RelayOut) {
 	if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(msg))
+}
+
+/**
+ * Past the per-address limit the client gets STUN only: voice may fail behind a strict NAT,
+ * but the game itself doesn't depend on it and keeps going.
+ */
+function sendIce(ws: WebSocket, id: string) {
+	const turn = Boolean(TURN.secret && TURN.urls)
+	const allowed = turn && limits.allowTurn(addresses.get(ws) ?? 'unknown', Date.now())
+
+	send(ws, { t: 'ice', servers: iceServers(allowed ? TURN : { ...TURN, secret: undefined }, id) })
 }
 
 function newRoomCode(): string {
@@ -78,7 +95,7 @@ function openRoom(ws: WebSocket, requested?: string) {
 	rooms.set(code, room)
 	membership.set(ws, { room, id: null })
 	send(ws, { t: 'hosting', code })
-	send(ws, { t: 'ice', servers: iceServers(TURN, HOST_ID) })
+	sendIce(ws, HOST_ID)
 
 	// Гости, ждавшие возвращения хоста, представятся заново
 	// (см. ws-relay.ts: `host-online` → open → `hello`).
@@ -102,7 +119,7 @@ function joinRoom(ws: WebSocket, rawCode: string, id: string) {
 	room.guests.set(id, ws)
 	membership.set(ws, { room, id })
 	send(ws, { t: 'joined', code: room.code })
-	send(ws, { t: 'ice', servers: iceServers(TURN, id) })
+	sendIce(ws, id)
 	send(ws, { t: 'host-online', online: room.host !== null })
 
 	if (room.host) send(room.host, { t: 'peer', id, online: true })
@@ -174,7 +191,21 @@ const http = createServer((_req, res) => {
 })
 const wss = new WebSocketServer({ server: http, maxPayload: MAX_MESSAGE_BYTES })
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
+	const ip = clientIp(req.socket.remoteAddress, req.headers['x-forwarded-for'], TRUST_PROXY)
+
+	// Before the limit check: a refused socket can still error during the close handshake,
+	// and an unhandled 'error' would bring the whole relay down.
+	ws.on('error', () => ws.terminate())
+
+	// A refused socket isn't counted, so it must not reach the close handler that uncounts.
+	if (!limits.connect(ip)) {
+		ws.close(1013, 'too-many-connections')
+
+		return
+	}
+
+	addresses.set(ws, ip)
 	let alive = true
 
 	ws.on('pong', () => (alive = true))
@@ -222,10 +253,9 @@ wss.on('connection', (ws) => {
 
 	ws.on('close', () => {
 		clearInterval(ping)
+		limits.disconnect(ip)
 		leave(ws)
 	})
-
-	ws.on('error', () => ws.terminate())
 })
 
 // Комнаты, покинутые хостом надолго, убираем — иначе коды копятся вечно.
@@ -239,6 +269,8 @@ setInterval(() => {
 			rooms.delete(code)
 		}
 	}
+
+	limits.sweep(now)
 }, SWEEP_MS).unref()
 
 http.listen(PORT, () => console.log(`codenames relay: ws://0.0.0.0:${PORT}`))
