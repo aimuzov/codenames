@@ -29,7 +29,7 @@ import { HostHub } from '#frontend/transport/host-hub.ts'
 import type { ClientMessage, HostMessage, PlayerInfo } from '#frontend/transport/messages.ts'
 import type { GuestTransport, HostTransport } from '#frontend/transport/types.ts'
 import { GuestConnection } from '#frontend/transport/webrtc.ts'
-import { WsGuestTransport, WsHostTransport } from '#frontend/transport/ws-relay.ts'
+import { WsGuestTransport, WsHostTransport, type VoiceSignaling } from '#frontend/transport/ws-relay.ts'
 
 /** Игровой id хоста в ростере. Гости вместо него используют {@link deviceId}. */
 export const HOST_ID = 'host'
@@ -77,6 +77,17 @@ export const roomCodeAtom = atom<string>('')
 
 let hub: HostTransport | null = null
 let guest: GuestTransport | null = null
+
+/** Voice signaling of the current relay transport; null in the QR mode and outside a session. */
+export const voiceSignalingAtom = atom<VoiceSignaling | null>(null)
+
+function syncVoiceSignaling() {
+	const transport = hub ?? guest
+
+	voiceSignalingAtom.set(
+		transport instanceof WsHostTransport || transport instanceof WsGuestTransport ? transport.voice : null,
+	)
+}
 /** Тот же гостевой канал, пока партия идёт по QR: только у него есть offer и answer. */
 let qrGuest: QrGuest | null = null
 
@@ -230,6 +241,7 @@ function openHostHub() {
 
 	hub.onMessage(handleClientMessage)
 	startHeartbeat(hostHeartbeat)
+	syncVoiceSignaling()
 }
 
 /** Комнату занял кто-то другой — код придётся получить заново (партия при этом цела). */
@@ -292,6 +304,10 @@ function handleClientMessage(connId: string, msg: ClientMessage) {
 		case 'intent':
 			hostSubmit(playerId, msg.event)
 			break
+		case 'voice':
+			patchRoster(playerId, { voice: msg.on, muted: msg.muted })
+			broadcastLobby()
+			break
 	}
 }
 
@@ -302,7 +318,9 @@ function handleClientMessage(connId: string, msg: ClientMessage) {
 function welcomePlayer(connId: string, playerId: string, name: string) {
 	clearRemovalTimer(playerId)
 	bindConn(connId, playerId)
-	const patch = { name: name || 'Игрок', connected: true }
+	// The player may have come back after an app restart with the voice chat off, so until
+	// they announce it again we don't count them in: nobody would answer the mesh's offers.
+	const patch = { name: name || 'Игрок', connected: true, voice: false, muted: false }
 
 	if (rosterAtom().some((p) => p.id === playerId)) {
 		patchRoster(playerId, patch)
@@ -372,6 +390,24 @@ export function hostReshuffle() {
 	broadcastLobby()
 }
 
+/** Repeated after every `hello`: the host forgets it on reconnect (see welcomePlayer). */
+let myVoice = { on: false, muted: false }
+
+/**
+ * Tells the room whether we're in the voice chat and whether the mic is on. The host patches
+ * its own roster row; a guest asks the host to, like with `setup`.
+ */
+export function announceVoice(on: boolean, muted: boolean) {
+	myVoice = { on, muted }
+
+	if (modeAtom() === 'host') {
+		patchRoster(HOST_ID, { voice: on, muted })
+		broadcastLobby()
+	} else {
+		guest?.send({ t: 'voice', on, muted })
+	}
+}
+
 /** Хост запускает партию. */
 export function hostStartGame(config: GameConfig) {
 	gameAtom.set(createGame(config))
@@ -412,10 +448,13 @@ function openGuestConnection() {
 		connStatusAtom.set('connected')
 		lastSeen.set(HOST_ID, Date.now())
 		guest?.send({ t: 'hello', id: myIdAtom(), name: myNameAtom() })
+
+		if (myVoice.on) guest?.send({ t: 'voice', ...myVoice })
 	})
 
 	guest.onClose(() => connStatusAtom.set('error'))
 	startHeartbeat(guestHeartbeat)
+	syncVoiceSignaling()
 
 	setIntentSender((event) => guest?.send({ t: 'intent', event }))
 	setHostSubmit(null)
@@ -428,6 +467,7 @@ function guestRelayFatal() {
 	guest = null
 	qrGuest = null
 	stopHeartbeat()
+	syncVoiceSignaling()
 }
 
 /** Пульс гостя: отмечается сам и следит, не замолчал ли хост. */
@@ -523,6 +563,8 @@ export function leaveSession() {
 	guest?.close()
 	hub = null
 	guest = null
+	myVoice = { on: false, muted: false }
+	syncVoiceSignaling()
 	setHostSubmit(null)
 	setIntentSender(null)
 	modeAtom.set('local')
@@ -589,7 +631,8 @@ export function resumeSession() {
 	viewRoleAtom.set(snap.role)
 	startedAtom.set(snap.started)
 	// Живых соединений после перезапуска нет ни у кого, кроме нас самих.
-	rosterAtom.set(snap.roster.map((p) => ({ ...p, connected: p.id === snap.id })))
+	// The voice chat doesn't survive a restart either: everyone announces it again on reconnect.
+	rosterAtom.set(snap.roster.map((p) => ({ ...p, connected: p.id === snap.id, voice: false, muted: false })))
 
 	if (snap.mode === 'host') {
 		gameAtom.set(snap.game)

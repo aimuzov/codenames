@@ -40,6 +40,9 @@ export default defineConfig(preset, {
 						'--disable-features=WebRtcHideLocalIpsWithMdns',
 						'--allow-loopback-in-peer-connection',
 						'--force-webrtc-ip-handling-policy=default',
+						// Voice chat: a synthetic mic, and no permission prompt for it.
+						'--use-fake-device-for-media-stream',
+						'--use-fake-ui-for-media-stream',
 					],
 				},
 			},

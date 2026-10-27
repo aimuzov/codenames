@@ -14,6 +14,8 @@ export type RelayIn<Data = unknown> =
 	| { t: 'join'; code: string; id: string }
 	/** Переслать полезную нагрузку: хост указывает id гостя, гость — всегда хосту. */
 	| { t: 'to'; to?: string; data: Data }
+	/** Voice chat signaling (SDP, ICE) to any room member: 'host' or a guest id. */
+	| { t: 'voice'; to: string; data: unknown }
 
 /** Сервер→клиенту. */
 export type RelayOut<Data = unknown> =
@@ -27,7 +29,14 @@ export type RelayOut<Data = unknown> =
 	| { t: 'peer'; id: string; online: boolean }
 	/** Гостю — хост на связи или нет (он мог уснуть или перезапуститься). */
 	| { t: 'host-online'; online: boolean }
+	/** Voice chat signaling from another room member ('host' or a guest id). */
+	| { t: 'voice'; from: string; data: unknown }
+	/** ICE servers for voice chat: STUN plus short-lived TURN credentials, if configured. */
+	| { t: 'ice'; servers: IceServer[] }
 	| { t: 'error'; reason: 'no-room' | 'room-taken' | 'bad-message' }
+
+/** Same shape as RTCIceServer, which Node has no types for. */
+export type IceServer = { urls: string | string[]; username?: string; credential?: string }
 
 /** Алфавит кода комнаты — без символов, которые путаются при диктовке и наборе (0/O, 1/I). */
 export const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'

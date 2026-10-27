@@ -15,6 +15,7 @@
 	import PlayerBadge from '#frontend/components/game/player-badge.svelte'
 	import ScoreChip from '#frontend/components/game/score-chip.svelte'
 	import WordToken from '#frontend/components/game/word-token.svelte'
+	import VoiceControls from '#frontend/components/net/voice-controls.svelte'
 	import Screen from '#frontend/components/screen.svelte'
 	import TopBar from '#frontend/components/top-bar.svelte'
 	import Button from '#frontend/components/ui/button.svelte'
@@ -126,6 +127,7 @@
 			<TopBar onback={requestBack}>
 				{#snippet heading()}<PlayerBadge />{/snippet}
 				{#snippet right()}
+					<VoiceControls />
 					<Button variant="outline" size="icon" onclick={() => goToStats()} aria-label="Статистика">
 						<ChartColumn />
 					</Button>

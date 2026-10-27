@@ -8,6 +8,7 @@
 
 	import QrCode from '#frontend/components/net/qr-code.svelte'
 	import RosterList from '#frontend/components/net/roster-list.svelte'
+	import VoiceControls from '#frontend/components/net/voice-controls.svelte'
 	import SectionTitle from '#frontend/components/net/section-title.svelte'
 	import SetupPicker from '#frontend/components/net/setup-picker.svelte'
 	import Screen from '#frontend/components/screen.svelte'
@@ -66,7 +67,11 @@
 </script>
 
 <Screen onback={back}>
-	{#snippet header()}<TopBar title="Создание игры" onback={back} />{/snippet}
+	{#snippet header()}
+		<TopBar title="Создание игры" onback={back}>
+			{#snippet right()}<VoiceControls />{/snippet}
+		</TopBar>
+	{/snippet}
 
 	<Card>
 		<SectionTitle>Вы</SectionTitle>

@@ -1,9 +1,49 @@
 import type { ClientMessage, HostMessage } from '#frontend/transport/messages.ts'
 import type { GuestTransport, HostTransport } from '#frontend/transport/types.ts'
-import type { RelayIn as Envelope, RelayOut as EnvelopeOut } from '#shared/relay-protocol.ts'
+import type { RelayIn as Envelope, RelayOut as EnvelopeOut, IceServer } from '#shared/relay-protocol.ts'
 
 type RelayIn = Envelope<ClientMessage | HostMessage>
 type RelayOut = EnvelopeOut<ClientMessage | HostMessage>
+
+/**
+ * Voice chat signaling over the same relay socket. Only the relay transport has it: the QR
+ * mode has no server to route through, and its players sit next to each other anyway.
+ */
+export type VoiceSignaling = {
+	send(to: string, data: unknown): void
+	onSignal(cb: (from: string, data: unknown) => void): () => void
+	/** The latest servers from the relay; they come with every (re)join. */
+	readonly iceServers: IceServer[]
+}
+
+class RelayVoice implements VoiceSignaling {
+	iceServers: IceServer[] = []
+	private cbs = new Set<(from: string, data: unknown) => void>()
+	private readonly socket: ReconnectingSocket
+
+	constructor(socket: ReconnectingSocket) {
+		this.socket = socket
+	}
+
+	/** Takes the envelopes meant for voice; false means the message is someone else's. */
+	handle(msg: RelayOut): boolean {
+		if (msg.t === 'ice') this.iceServers = msg.servers
+		else if (msg.t === 'voice') for (const cb of this.cbs) cb(msg.from, msg.data)
+		else return false
+
+		return true
+	}
+
+	send(to: string, data: unknown) {
+		this.socket.send({ t: 'voice', to, data })
+	}
+
+	onSignal(cb: (from: string, data: unknown) => void) {
+		this.cbs.add(cb)
+
+		return () => this.cbs.delete(cb)
+	}
+}
 
 /**
  * Транспорт поверх WS-релея. Главное отличие от QR/WebRTC: разорванный канал чинится сам —
@@ -112,6 +152,7 @@ class ReconnectingSocket {
 
 /** Сторона хоста: комната на релее, гости адресуются своим id устройства. */
 export class WsHostTransport implements HostTransport {
+	readonly voice: RelayVoice
 	private socket: ReconnectingSocket
 	private code: string | null = null
 	private guests = new Set<string>()
@@ -138,9 +179,13 @@ export class WsHostTransport implements HostTransport {
 			(msg) => this.handle(msg),
 			() => {},
 		)
+
+		this.voice = new RelayVoice(this.socket)
 	}
 
 	private handle(msg: RelayOut) {
+		if (this.voice.handle(msg)) return
+
 		switch (msg.t) {
 			case 'hosting':
 				this.code = msg.code
@@ -183,6 +228,7 @@ export class WsHostTransport implements HostTransport {
 
 /** Сторона гостя: канал до хоста через комнату релея. */
 export class WsGuestTransport implements GuestTransport {
+	readonly voice: RelayVoice
 	private socket: ReconnectingSocket
 	private hostOnline = false
 	private messageCb: (msg: HostMessage) => void = () => {}
@@ -203,6 +249,8 @@ export class WsGuestTransport implements GuestTransport {
 			(msg) => this.handle(msg),
 			() => this.setHostOnline(false),
 		)
+
+		this.voice = new RelayVoice(this.socket)
 	}
 
 	/**
@@ -219,6 +267,8 @@ export class WsGuestTransport implements GuestTransport {
 	}
 
 	private handle(msg: RelayOut) {
+		if (this.voice.handle(msg)) return
+
 		switch (msg.t) {
 			case 'host-online':
 				this.setHostOnline(msg.online)

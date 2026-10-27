@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Mic from '@lucide/svelte/icons/mic'
+	import MicOff from '@lucide/svelte/icons/mic-off'
+
 	import { rosterAtom } from '#frontend/state/net.ts'
 
 	const ROLE_LABEL = { spymaster: 'капитан', operative: 'игрок' } as const
@@ -13,6 +16,16 @@
 			<li class="roster-list__item">
 				<span class="roster-list__dot roster-list__dot--{player.team}"></span>
 				<span class="roster-list__name">{player.name}</span>
+				{#if player.voice}
+					<span
+						class="roster-list__voice"
+						class:roster-list__voice--muted={player.muted}
+						data-testid="voice-{player.muted ? 'muted' : 'live'}"
+						title={player.muted ? 'В голосовом чате, микрофон выключен' : 'В голосовом чате'}
+					>
+						{#if player.muted}<MicOff size={14} />{:else}<Mic size={14} />{/if}
+					</span>
+				{/if}
 				<span class="roster-list__role">{ROLE_LABEL[player.role]}</span>
 				{#if !player.connected}<span class="roster-list__offline">офлайн</span>{/if}
 			</li>
@@ -61,6 +74,15 @@
 		&__name {
 			flex: 1;
 			font-weight: 500;
+		}
+
+		&__voice {
+			display: inline-flex;
+			color: var(--primary);
+
+			&--muted {
+				color: var(--muted-foreground);
+			}
 		}
 
 		&__role {

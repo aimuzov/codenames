@@ -7,6 +7,10 @@ export type PlayerInfo = {
 	team: Team
 	role: Role
 	connected: boolean
+	/** In the voice chat: the mesh connects only to players who have this set. */
+	voice?: boolean
+	/** Mic off, by hand or by the spymaster auto-mute. */
+	muted?: boolean
 }
 
 /**
@@ -26,4 +30,5 @@ export type ClientMessage =
 	| { t: 'hello'; id: string; name: string }
 	| { t: 'setup'; team: Team; role: Role }
 	| { t: 'intent'; event: GameEvent }
+	| { t: 'voice'; on: boolean; muted: boolean }
 	| { t: 'ping' }
