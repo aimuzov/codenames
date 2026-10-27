@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.6.0](https://github.com/aimuzov/codenames/compare/v1.5.3...v1.6.0) (2026-10-27)
+
+
+### Features
+
+* **voice:** add voice chat to online rooms ([9c7d2f2](https://github.com/aimuzov/codenames/commit/9c7d2f25aea715f1de6b75c1726f289e7c0bb052))
+* **voice:** add voice chat to online rooms ([4245a2c](https://github.com/aimuzov/codenames/commit/4245a2c34650f3a2454b570db528a96e4bbc4178))
+
+
+### Bug Fixes
+
+* **relay:** handle errors on sockets refused by the connection limit ([5f441df](https://github.com/aimuzov/codenames/commit/5f441df14c5b3c8caf726251440b8b89d8e7d13f))
+* **relay:** limit connections and TURN credentials per client IP ([c8bda33](https://github.com/aimuzov/codenames/commit/c8bda33eb23207f7b2c623de7203559fc0922c19))
+* **relay:** limit connections and TURN credentials per client IP ([0e6a1aa](https://github.com/aimuzov/codenames/commit/0e6a1aa9dff3cd7f82143686be3aa605593badd6))
+* **voice:** cap TURN allocations per credential ([5db18da](https://github.com/aimuzov/codenames/commit/5db18daa9dcd4229cd1e9fb3ed43034187e95a59))
+* **voice:** harden TURN setup and release mic after an abandoned join ([4271e34](https://github.com/aimuzov/codenames/commit/4271e348b7248b910517c24bc8086c92b7d5dc0d))
+
 ## [1.5.3](https://github.com/aimuzov/codenames/compare/v1.5.2...v1.5.3) (2026-10-27)
 
 
