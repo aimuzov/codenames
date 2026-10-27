@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.5.3](https://github.com/aimuzov/codenames/compare/v1.5.2...v1.5.3) (2026-10-27)
+
+
+### Bug Fixes
+
+* **deps:** move to infra-site-kit v5.5.0 ([3847ac1](https://github.com/aimuzov/codenames/commit/3847ac1e75aab46738bd84bd5f393c43a024a65c))
+* **deps:** move to infra-site-kit v5.8.1 ([209d85a](https://github.com/aimuzov/codenames/commit/209d85a9d16d943986c6e0d9ccdf21d3f0e45bfe))
+* **deps:** move to infra-site-kit v5.8.1 ([d4f2cb6](https://github.com/aimuzov/codenames/commit/d4f2cb6cf5aa1bc4376269b010084ae6ce3869fc))
+
 ## [1.5.2](https://github.com/aimuzov/codenames/compare/v1.5.1...v1.5.2) (2026-10-24)
 
 
