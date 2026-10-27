@@ -32,6 +32,10 @@ services:
     restart: unless-stopped
     # TURN_SECRET and TURN_URLS: the relay hands out voice chat TURN credentials.
     env_file: ../.env
+    # Caddy is the only way in (no published ports), so its X-Forwarded-For can be trusted:
+    # the relay limits connections and TURN credentials per client address.
+    environment:
+      TRUST_PROXY: '1'
     networks:
       - edge
     logging: *logging
