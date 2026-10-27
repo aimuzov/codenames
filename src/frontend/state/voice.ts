@@ -57,7 +57,17 @@ export async function joinVoice() {
 	try {
 		const { VoiceMesh } = await import('#frontend/voice/mesh.ts')
 
-		mesh = await VoiceMesh.open(signaling, myIdAtom())
+		const opened = await VoiceMesh.open(signaling, myIdAtom())
+
+		// The session ended while the permission prompt was up: nobody is left to hear us, and
+		// the controls are gone, so release the mic right away.
+		if (voiceSignalingAtom() !== signaling) {
+			opened.close()
+
+			return
+		}
+
+		mesh = opened
 		meshSignaling = signaling
 	} catch {
 		toast.error('Нет доступа к микрофону', { description: 'Разрешите его в настройках браузера' })

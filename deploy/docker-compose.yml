@@ -47,7 +47,11 @@ services:
     env_file: ../.env
     volumes:
       - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
-    entrypoint: ['sh', '-c', 'exec turnserver -c /etc/coturn/turnserver.conf --static-auth-secret="$$TURN_SECRET"']
+    # An empty secret is an empty HMAC key: anyone could mint credentials, so refuse to start.
+    entrypoint:
+      - sh
+      - -c
+      - '[ -n "$$TURN_SECRET" ] || { echo "TURN_SECRET is not set" >&2; exit 1; }; exec turnserver -c /etc/coturn/turnserver.conf --static-auth-secret="$$TURN_SECRET"'
     logging: *logging
 
 # Переменные сборки лежат в /srv/codenames/.env, образец в .env.example.
