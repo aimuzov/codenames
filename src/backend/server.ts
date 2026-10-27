@@ -194,6 +194,10 @@ const wss = new WebSocketServer({ server: http, maxPayload: MAX_MESSAGE_BYTES })
 wss.on('connection', (ws, req) => {
 	const ip = clientIp(req.socket.remoteAddress, req.headers['x-forwarded-for'], TRUST_PROXY)
 
+	// Before the limit check: a refused socket can still error during the close handshake,
+	// and an unhandled 'error' would bring the whole relay down.
+	ws.on('error', () => ws.terminate())
+
 	// A refused socket isn't counted, so it must not reach the close handler that uncounts.
 	if (!limits.connect(ip)) {
 		ws.close(1013, 'too-many-connections')
@@ -252,8 +256,6 @@ wss.on('connection', (ws, req) => {
 		limits.disconnect(ip)
 		leave(ws)
 	})
-
-	ws.on('error', () => ws.terminate())
 })
 
 // Комнаты, покинутые хостом надолго, убираем — иначе коды копятся вечно.
