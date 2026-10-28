@@ -16,6 +16,7 @@
 	import Rules from '#frontend/screens/rules.svelte'
 	import Settings from '#frontend/screens/settings.svelte'
 	import Stats from '#frontend/screens/stats.svelte'
+	import { consumeInviteLink } from '#frontend/state/net.ts'
 	import { registerServiceWorker } from '#frontend/state/pwa.ts'
 	import { applyCardWordSize, keepAwakeAtom } from '#frontend/state/settings.ts'
 	import { applyTheme } from '#frontend/state/theme.ts'
@@ -44,6 +45,7 @@
 	applyCardWordSize()
 	registerServiceWorker()
 	void hydrateCustomPacks()
+	consumeInviteLink()
 
 	// Стартовый лоадер из pages/index.astro убираем после первого рендера настоящего интерфейса.
 	$effect(() => {

@@ -35,6 +35,9 @@ export const composerOpenAtom = atom<boolean>(false)
  */
 export const joinModeAtom = atom<'new' | 'reconnect'>('new')
 
+/** Код из ссылки-приглашения: экран подключения подставит его и предложит войти. */
+export const inviteCodeAtom = atom<string>('')
+
 /** Открыть экран подключения в нужном режиме. */
 export function goToJoin(mode: 'new' | 'reconnect' = 'new') {
 	joinModeAtom.set(mode)

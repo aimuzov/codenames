@@ -64,3 +64,33 @@ export function normalizeRoomCode(input: string): string {
 export function isRoomCode(code: string): boolean {
 	return code.length === ROOM_CODE_LENGTH && [...code].every((c) => ROOM_CODE_ALPHABET.includes(c))
 }
+
+/** Параметр ссылки-приглашения: `/?room=ABC234`. */
+export const INVITE_PARAM = 'room'
+
+/** Ссылка-приглашение в комнату: открывает приложение сразу на входе с этим кодом. */
+export function inviteUrl(origin: string, code: string): string {
+	return `${origin}/?${INVITE_PARAM}=${code}`
+}
+
+/**
+ * Код комнаты из того, что ввели или отсканировали: голого кода или ссылки-приглашения.
+ * Ссылку разбираем отдельно, иначе {@link normalizeRoomCode} склеил бы буквы всего адреса.
+ *
+ * @returns канонический код или `null`, если кода тут нет.
+ */
+export function parseRoomCode(raw: string): string | null {
+	const url = toUrl(raw.trim())
+	const code = normalizeRoomCode(url ? (url.searchParams.get(INVITE_PARAM) ?? '') : raw)
+
+	return isRoomCode(code) ? code : null
+}
+
+// Не URL.parse: его нет в Safari до 18, а PWA на старых iOS живут долго.
+function toUrl(raw: string): URL | null {
+	try {
+		return new URL(raw)
+	} catch {
+		return null
+	}
+}

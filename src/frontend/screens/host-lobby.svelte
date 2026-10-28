@@ -3,6 +3,7 @@
 	import Dices from '@lucide/svelte/icons/dices'
 	import Play from '@lucide/svelte/icons/play'
 	import QrCodeIcon from '@lucide/svelte/icons/qr-code'
+	import Share2 from '@lucide/svelte/icons/share-2'
 	import UserPlus from '@lucide/svelte/icons/user-plus'
 	import Wifi from '@lucide/svelte/icons/wifi'
 
@@ -16,6 +17,8 @@
 	import Button from '#frontend/components/ui/button.svelte'
 	import Card from '@aimuzov/infra-site-kit/ui/card.svelte'
 	import Dialog from '#frontend/components/ui/dialog.svelte'
+	import { site } from '#frontend/data/site.ts'
+	import { toast } from '#frontend/lib/toast.ts'
 	import {
 		HOST_ID,
 		hostReshuffle,
@@ -30,6 +33,7 @@
 	import { isRosterReady, randomSetup, teamHasSpymaster } from '#frontend/state/roster.ts'
 	import { modeAtom, myRoleAtom, myTeamAtom } from '#frontend/state/session.ts'
 	import { goBack, goTo, selectedWordsAtom } from '#frontend/state/ui.ts'
+	import { inviteUrl } from '#shared/relay-protocol.ts'
 
 	// Запускаем хостинг при входе, но не при возврате с экрана «Добавить игрока»: экран
 	// перемонтируется на каждом переходе, а startHosting деструктивен (сбросил бы ростер).
@@ -43,6 +47,29 @@
 	const canReshuffle = $derived($rosterAtom.filter((p) => p.connected).length >= 4)
 
 	let showRosterAlert = $state(false)
+
+	const invite = $derived(inviteUrl(location.origin, $roomCodeAtom))
+
+	// Системное меню "Поделиться", а где его нет (десктопный Firefox) -- копия в буфер.
+	async function share() {
+		if (navigator.share) {
+			try {
+				await navigator.share({ title: site.name, text: `Заходи в комнату ${$roomCodeAtom}`, url: invite })
+			} catch (e) {
+				// Закрыть меню, ничего не выбрав, -- не ошибка.
+				if (!(e instanceof DOMException && e.name === 'AbortError')) toast.error('Не удалось поделиться')
+			}
+
+			return
+		}
+
+		try {
+			await navigator.clipboard.writeText(invite)
+			toast.success('Ссылка скопирована')
+		} catch {
+			toast.error('Не удалось скопировать ссылку')
+		}
+	}
 
 	function back() {
 		leaveSession()
@@ -90,10 +117,15 @@
 				<SectionTitle>Код комнаты</SectionTitle>
 				{#if $roomCodeAtom}
 					<span data-testid="room-code" class="host-lobby__code">{$roomCodeAtom}</span>
-					<QrCode value={$roomCodeAtom} />
+					<QrCode value={invite} />
 					<p class="host-lobby__hint host-lobby__hint--center">
-						Продиктуйте код или дайте отсканировать. Игроки вернутся сами, даже если телефон уснёт.
+						Продиктуйте код, дайте отсканировать или отправьте ссылку. Игроки вернутся сами, даже если
+						телефон уснёт.
 					</p>
+					<Button block onclick={() => void share()}>
+						<Share2 />
+						Пригласить
+					</Button>
 				{:else}
 					<p class="host-lobby__hint">Открываем комнату…</p>
 				{/if}
