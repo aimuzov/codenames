@@ -1,18 +1,18 @@
 import { isIPv6 } from 'node:net'
 
 /**
- * Per-client-IP limits of the relay. Without accounts a client can rejoin under fresh ids
- * forever, and every join mints new TURN credentials, each worth coturn's `user-quota`
- * allocations: enough identities exhaust the relay ports for everyone. Limits are keyed by
- * the address instead, which a client can't change as cheaply as an id.
+ * Лимиты релея на IP клиента. Аккаунтов нет, поэтому клиент может бесконечно перевходить под
+ * новыми id, а каждый вход выписывает новые TURN-доступы, и каждый стоит `user-quota` аллокаций
+ * coturn: набрав достаточно личностей, можно занять порты релея для всех. Поэтому ключ лимитов —
+ * адрес, его клиент не сменит так же дёшево, как id.
  *
- * Pure bookkeeping: the caller passes the clock, nothing here touches sockets.
+ * Чистый учёт: время передаёт вызывающий, сокетов здесь ничто не касается.
  */
 
 export type LimitsConfig = {
-	/** Concurrent WebSocket connections per IP. */
+	/** Одновременные WebSocket-соединения на IP. */
 	maxConnections: number
-	/** TURN credentials per IP within the sliding window; past it the client gets STUN only. */
+	/** TURN-доступы на IP в скользящем окне; сверх этого клиент получает только STUN. */
 	maxTurn: number
 	turnWindowMs: number
 }
@@ -24,10 +24,10 @@ export const DEFAULT_LIMITS: LimitsConfig = {
 }
 
 /**
- * The address limits are keyed by. Behind the proxy (Caddy in prod) the socket address is the
- * proxy itself, so the client comes from `X-Forwarded-For`. Only its last entry is the proxy's
- * own word: anything to the left the client may have sent itself. Without a trusted proxy the
- * header is ignored altogether, otherwise any client could pick its own key.
+ * Адрес, по которому считаются лимиты. За прокси (в проде это Caddy) адрес сокета — это сам
+ * прокси, поэтому клиента берём из `X-Forwarded-For`. Только последняя запись в нём от самого
+ * прокси: всё, что левее, клиент мог прислать сам. Без доверенного прокси заголовок не смотрим
+ * вовсе, иначе любой клиент мог бы выбрать себе ключ сам.
  */
 export function clientIp(
 	remoteAddress: string | undefined,
@@ -41,8 +41,8 @@ export function clientIp(
 }
 
 /**
- * IPv4 as is, IPv4-mapped IPv6 unwrapped, other IPv6 cut to its /64: a single subscriber
- * usually gets a whole /64 and could rotate addresses inside it at will.
+ * IPv4 как есть, IPv4-mapped IPv6 разворачиваем, остальной IPv6 обрезаем до /64: одному абоненту
+ * обычно выдают целую /64, и внутри неё он может менять адреса сколько угодно.
  */
 export function ipKey(ip: string): string {
 	const mapped = ip.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i)
@@ -62,7 +62,7 @@ export function ipKey(ip: string): string {
 
 export function createLimits(config: LimitsConfig = DEFAULT_LIMITS) {
 	const connections = new Map<string, number>()
-	/** Issue times within the window, oldest first. */
+	/** Моменты выдачи в пределах окна, самые старые первыми. */
 	const issued = new Map<string, number[]>()
 
 	function recent(ip: string, now: number): number[] {
@@ -75,7 +75,7 @@ export function createLimits(config: LimitsConfig = DEFAULT_LIMITS) {
 	}
 
 	return {
-		/** Counts a new connection in; false means over the limit and nothing is counted. */
+		/** Засчитывает новое соединение; `false` — лимит превышен, и ничего не засчитано. */
 		connect(ip: string): boolean {
 			const count = connections.get(ip) ?? 0
 
@@ -93,7 +93,7 @@ export function createLimits(config: LimitsConfig = DEFAULT_LIMITS) {
 			else connections.delete(ip)
 		},
 
-		/** Whether this IP may get TURN credentials now; a yes is counted against it. */
+		/** Можно ли этому IP сейчас получить TURN-доступы; каждое «да» идёт ему в счёт. */
 		allowTurn(ip: string, now: number): boolean {
 			const times = recent(ip, now)
 
@@ -105,12 +105,12 @@ export function createLimits(config: LimitsConfig = DEFAULT_LIMITS) {
 			return true
 		},
 
-		/** Drops IPs whose window has emptied, so idle addresses don't pile up. */
+		/** Выкидывает IP с опустевшим окном, чтобы простаивающие адреса не копились. */
 		sweep(now: number) {
 			for (const ip of issued.keys()) recent(ip, now)
 		},
 
-		/** How many IPs are tracked at all. */
+		/** Сколько IP отслеживается всего. */
 		tracked(): number {
 			return new Set([...connections.keys(), ...issued.keys()]).size
 		},

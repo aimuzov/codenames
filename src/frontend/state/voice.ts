@@ -8,25 +8,25 @@ import type { VoiceSignaling } from '#frontend/transport/ws-relay.ts'
 import type { VoiceMesh } from '#frontend/voice/mesh.ts'
 
 /**
- * Voice chat of an online room: one channel for everyone. The spymaster gets muted for their
- * team's turn, so a hint can't slip out by voice; they can still unmute by hand.
+ * Голосовой чат онлайн-комнаты: один канал на всех. На ход своей команды капитану выключаем
+ * микрофон, чтобы подсказка не проскочила голосом; включить его обратно вручную он всё равно может.
  */
 
 export const voiceOnAtom = atom(false)
 export const micMutedAtom = atom(false)
-/** True from the tap until the mic is ours: the mesh module loads, the permission prompt waits. */
+/** `true` от нажатия до получения микрофона: грузится модуль меша, висит запрос разрешения. */
 export const voiceJoiningAtom = atom(false)
 
 let mesh: VoiceMesh | null = null
-/** The transport the mesh signals through: a new one means the room the mesh knew is gone. */
+/** Транспорт сигналинга меша: если он сменился, комнаты, которую знал меш, больше нет. */
 let meshSignaling: VoiceSignaling | null = null
-/** Set while the current mute is the auto one: then the turn's end gives the mic back. */
+/** Выставлен, пока мьют автоматический: тогда с концом хода микрофон вернётся. */
 let autoMuted = false
 let captainTurn = false
 
 type TurnView = { currentTeam: Team; phase: GamePhase } | null
 
-/** Whether it's the turn of this spymaster's team, the time their voice must stay out. */
+/** Идёт ли ход команды этого капитана — то время, когда его голоса быть не должно. */
 export function isCaptainTurn(view: TurnView, team: Team, role: Role): boolean {
 	return role === 'spymaster' && !!view && view.phase !== 'over' && view.currentTeam === team
 }
@@ -59,8 +59,8 @@ export async function joinVoice() {
 
 		const opened = await VoiceMesh.open(signaling, myIdAtom())
 
-		// The session ended while the permission prompt was up: nobody is left to hear us, and
-		// the controls are gone, so release the mic right away.
+		// Сессия закончилась, пока висел запрос разрешения: слушать нас уже некому, кнопок
+		// тоже нет, поэтому микрофон отпускаем сразу.
 		if (voiceSignalingAtom() !== signaling) {
 			opened.close()
 
@@ -77,7 +77,7 @@ export async function joinVoice() {
 		voiceJoiningAtom.set(false)
 	}
 
-	// Joining mid-turn as the spymaster starts muted just like at the turn's start.
+	// Капитан, вошедший посреди хода, начинает с выключенным микрофоном, как и в начале хода.
 	autoMuted = isCaptainTurn(viewAtom(), myTeamAtom(), myRoleAtom())
 	captainTurn = autoMuted
 	voiceOnAtom.set(true)
@@ -103,7 +103,7 @@ export function toggleMic() {
 
 onChange(rosterAtom, syncMesh)
 
-// The session's transport went away (left the game, or the room is gone): so did the chat.
+// Транспорт сессии пропал (вышли из игры или комнаты больше нет) — значит, пропал и чат.
 onChange(voiceSignalingAtom, () => {
 	if (mesh && voiceSignalingAtom() !== meshSignaling) leaveVoice()
 })

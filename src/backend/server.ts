@@ -27,9 +27,9 @@ const SWEEP_MS = 60 * 1000
 const MAX_ROOMS = 500
 const MAX_MESSAGE_BYTES = 256 * 1024
 const TURN = turnConfigFromEnv()
-/** Set in prod, where Caddy is the only way in: then the client address is in X-Forwarded-For. */
+/** Выставлен в проде, где вход только через Caddy: тогда адрес клиента в X-Forwarded-For. */
 const TRUST_PROXY = process.env.TRUST_PROXY === '1'
-/** How the host is addressed in voice signaling: same as HOST_ID on the client. */
+/** Как адресуется хост в голосовом сигналинге: так же, как HOST_ID на клиенте. */
 const HOST_ID = 'host'
 
 type Room = {
@@ -42,7 +42,7 @@ type Room = {
 
 const rooms = new Map<string, Room>()
 const limits = createLimits()
-/** Client address per socket: TURN credentials are rationed per address, not per player id. */
+/** Адрес клиента по сокету: TURN-доступы выдаём по норме на адрес, а не на id игрока. */
 const addresses = new WeakMap<WebSocket, string>()
 /** Обратный индекс: по сокету понимаем, кого отцеплять при закрытии. */
 const membership = new WeakMap<WebSocket, { room: Room; id: string | null }>()
@@ -52,8 +52,8 @@ function send(ws: WebSocket, msg: RelayOut) {
 }
 
 /**
- * Past the per-address limit the client gets STUN only: voice may fail behind a strict NAT,
- * but the game itself doesn't depend on it and keeps going.
+ * Сверх лимита на адрес клиент получает только STUN: за строгим NAT голос может не завестись,
+ * но сама игра от него не зависит и продолжается.
  */
 function sendIce(ws: WebSocket, id: string) {
 	const turn = Boolean(TURN.secret && TURN.urls)
@@ -143,8 +143,8 @@ function route(ws: WebSocket, msg: Extract<RelayIn, { t: 'to' }>) {
 }
 
 /**
- * Voice chat is a mesh, so unlike game messages signaling goes between guests too.
- * Strangers can't be reached: the target is looked up only within the sender's room.
+ * Голосовой чат — это меш, поэтому, в отличие от игровых сообщений, сигналинг ходит и между
+ * гостями. До чужих не достучаться: адресата ищем только в комнате отправителя.
  */
 function routeVoice(ws: WebSocket, msg: Extract<RelayIn, { t: 'voice' }>) {
 	const seat = membership.get(ws)
@@ -194,11 +194,12 @@ const wss = new WebSocketServer({ server: http, maxPayload: MAX_MESSAGE_BYTES })
 wss.on('connection', (ws, req) => {
 	const ip = clientIp(req.socket.remoteAddress, req.headers['x-forwarded-for'], TRUST_PROXY)
 
-	// Before the limit check: a refused socket can still error during the close handshake,
-	// and an unhandled 'error' would bring the whole relay down.
+	// До проверки лимита: отказанный сокет всё ещё может упасть с ошибкой во время закрытия,
+	// а необработанный 'error' уронит весь релей.
 	ws.on('error', () => ws.terminate())
 
-	// A refused socket isn't counted, so it must not reach the close handler that uncounts.
+	// Отказанный сокет не посчитан, поэтому он не должен дойти до обработчика close,
+	// который снимает его со счёта.
 	if (!limits.connect(ip)) {
 		ws.close(1013, 'too-many-connections')
 

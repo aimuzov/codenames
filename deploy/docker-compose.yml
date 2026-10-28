@@ -30,19 +30,19 @@ services:
     image: codenames-relay
     container_name: codenames-relay
     restart: unless-stopped
-    # TURN_SECRET and TURN_URLS: the relay hands out voice chat TURN credentials.
+    # TURN_SECRET и TURN_URLS: по ним релей раздаёт TURN-доступы для голосового чата.
     env_file: ../.env
-    # Caddy is the only way in (no published ports), so its X-Forwarded-For can be trusted:
-    # the relay limits connections and TURN credentials per client address.
+    # Попасть сюда можно только через Caddy (наружу портов нет), поэтому его X-Forwarded-For
+    # можно доверять: по адресу клиента релей лимитирует подключения и TURN-доступы.
     environment:
       TRUST_PROXY: '1'
     networks:
       - edge
     logging: *logging
 
-  # TURN for the voice chat: phones behind carrier NAT can't reach each other directly.
-  # The one service here that publishes ports, and with host networking at that: Docker's
-  # proxy for a range of UDP relay ports would cost more than the audio itself.
+  # TURN для голосового чата: телефоны за NAT оператора напрямую друг до друга не достучатся.
+  # Единственный сервис здесь, который публикует порты, да ещё и через сеть хоста: докеровский
+  # прокси на диапазон UDP-портов релея обошёлся бы дороже самого звука.
   turn:
     image: coturn/coturn:4.18.0-alpine
     container_name: codenames-turn
@@ -51,7 +51,7 @@ services:
     env_file: ../.env
     volumes:
       - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
-    # An empty secret is an empty HMAC key: anyone could mint credentials, so refuse to start.
+    # Пустой секрет — это пустой ключ HMAC: доступы сможет выписать кто угодно, поэтому не стартуем.
     entrypoint:
       - sh
       - -c
