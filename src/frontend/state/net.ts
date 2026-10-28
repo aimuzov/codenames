@@ -598,8 +598,16 @@ export function consumeInviteLink() {
 	history.replaceState(history.state, '', url)
 
 	const code = parseRoomCode(raw)
+	const saved = savedSessionAtom()
+	const finished = saved?.game?.phase === 'over' || saved?.view?.phase === 'over'
 
-	if (!code || savedSessionAtom()) return
+	if (!code || (saved && !finished)) return
+
+	// В доигранную партию возвращаться незачем, её снимок только мешал бы новому входу.
+	if (finished) {
+		clearSnapshot()
+		savedSessionAtom.set(null)
+	}
 
 	inviteCodeAtom.set(code)
 	goToJoin('new')

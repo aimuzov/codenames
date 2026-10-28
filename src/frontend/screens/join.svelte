@@ -169,7 +169,7 @@
 				inputmode="text"
 				autocapitalize="characters"
 				placeholder="ABC123"
-				bind:value={() => roomInput, (v) => (roomInput = normalizeRoomCode(v))}
+				bind:value={() => roomInput, (v) => (roomInput = parseRoomCode(v) ?? normalizeRoomCode(v))}
 				onkeydown={(e) => e.key === 'Enter' && connectByCode(roomInput)}
 				{@attach (node) => node.focus()}
 			/>

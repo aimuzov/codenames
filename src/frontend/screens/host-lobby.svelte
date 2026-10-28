@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Check from '@lucide/svelte/icons/check'
+	import Copy from '@lucide/svelte/icons/copy'
 	import Dices from '@lucide/svelte/icons/dices'
 	import Play from '@lucide/svelte/icons/play'
 	import QrCodeIcon from '@lucide/svelte/icons/qr-code'
@@ -51,18 +52,21 @@
 	const invite = $derived(inviteUrl(location.origin, $roomCodeAtom))
 
 	// Системное меню "Поделиться", а где его нет (десктопный Firefox) -- копия в буфер.
+	// После сбоя сами не копируем: жест пользователя уже потрачен, Safari буфер не даст.
 	async function share() {
-		if (navigator.share) {
-			try {
-				await navigator.share({ title: site.name, text: `Заходи в комнату ${$roomCodeAtom}`, url: invite })
-			} catch (e) {
-				// Закрыть меню, ничего не выбрав, -- не ошибка.
-				if (!(e instanceof DOMException && e.name === 'AbortError')) toast.error('Не удалось поделиться')
+		if (!navigator.share) return copy()
+
+		try {
+			await navigator.share({ title: site.name, text: `Заходи в комнату ${$roomCodeAtom}`, url: invite })
+		} catch (e) {
+			// Закрыть меню, ничего не выбрав, -- не ошибка.
+			if (!(e instanceof DOMException && e.name === 'AbortError')) {
+				toast.error('Не удалось поделиться', { description: 'Скопируйте ссылку кнопкой рядом' })
 			}
-
-			return
 		}
+	}
 
+	async function copy() {
 		try {
 			await navigator.clipboard.writeText(invite)
 			toast.success('Ссылка скопирована')
@@ -122,10 +126,22 @@
 						Продиктуйте код, дайте отсканировать или отправьте ссылку. Игроки вернутся сами, даже если
 						телефон уснёт.
 					</p>
-					<Button block onclick={() => void share()}>
-						<Share2 />
-						Пригласить
-					</Button>
+					<div class="host-lobby__invite">
+						<div class="host-lobby__grow">
+							<Button block onclick={() => void share()}>
+								<Share2 />
+								Пригласить
+							</Button>
+						</div>
+						<Button
+							variant="outline"
+							size="icon"
+							aria-label="Скопировать ссылку"
+							onclick={() => void copy()}
+						>
+							<Copy />
+						</Button>
+					</div>
 				{:else}
 					<p class="host-lobby__hint">Открываем комнату…</p>
 				{/if}
@@ -217,6 +233,12 @@
 		&__actions {
 			display: flex;
 			gap: 0.5rem;
+		}
+
+		&__invite {
+			display: flex;
+			gap: 0.5rem;
+			align-self: stretch;
 		}
 
 		&__grow {
