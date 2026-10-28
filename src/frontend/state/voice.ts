@@ -73,13 +73,14 @@ export async function joinVoice() {
 
 	voiceJoiningAtom.set(true)
 
-	// Индикатору говорящих нужен AudioContext, а iOS запускает его только из самого нажатия:
-	// после первого await (загрузки модуля меша) жест уже потерян.
-	const audio = new AudioContext()
-
-	void audio.resume().catch(() => {})
+	let audio: AudioContext | undefined
 
 	try {
+		// Индикатору говорящих нужен AudioContext, а iOS запускает его только из самого нажатия:
+		// после первого await (загрузки модуля меша) жест уже потерян.
+		audio = new AudioContext()
+		void audio.resume().catch(() => {})
+
 		const { VoiceMesh } = await import('#frontend/voice/mesh.ts')
 
 		const opened = await VoiceMesh.open(signaling, myIdAtom(), audio)
@@ -96,7 +97,7 @@ export async function joinVoice() {
 		mesh.onSpeaking = (speaking) => speakingAtom.set(speaking)
 		meshSignaling = signaling
 	} catch {
-		void audio.close().catch(() => {})
+		void audio?.close().catch(() => {})
 		toast.error('Нет доступа к микрофону', { description: 'Разрешите его в настройках браузера' })
 
 		return
