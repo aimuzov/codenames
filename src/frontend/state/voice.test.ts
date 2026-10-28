@@ -41,4 +41,10 @@ describe('кружки говорящих в чипе счёта', () => {
 		assert.deepEqual(speakerMarks(players, new Set(['c']), 'red'), [])
 		assert.deepEqual(speakerMarks(players, new Set(['c']), 'blue'), [{ id: 'c', letter: 'С' }])
 	})
+
+	it('эмодзи в начале имени не рвёт пополам', () => {
+		const fox = [{ id: 'f', name: '🦊 Лиса', team: 'red', role: 'operative' }] as const
+
+		assert.deepEqual(speakerMarks(fox, new Set(['f']), 'red'), [{ id: 'f', letter: '🦊' }])
+	})
 })

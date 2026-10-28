@@ -55,16 +55,16 @@ const LEVEL_POLL_MS = 100
  * так ничего не нужно согласовывать, и индикатор не отстаёт от звука.
  */
 class SpeakingMeter {
-	private readonly ctx = new AudioContext()
 	private readonly sources = new Map<string, { node: MediaStreamAudioSourceNode; analyser: AnalyserNode }>()
 	private readonly lastLoud = new Map<string, number>()
 	private readonly buffer = new Float32Array(512)
 	private readonly timer: ReturnType<typeof setInterval>
 	private speaking = new Set<string>()
 
-	constructor(private readonly onChange: (speaking: ReadonlySet<string>) => void) {
-		// Контекст рождается по тапу «войти в чат», так iOS его и разрешит запустить.
-		void this.ctx.resume().catch(() => {})
+	constructor(
+		private readonly ctx: AudioContext,
+		private readonly onChange: (speaking: ReadonlySet<string>) => void,
+	) {
 		this.timer = setInterval(() => this.poll(), LEVEL_POLL_MS)
 	}
 
@@ -135,11 +135,13 @@ export class VoiceMesh {
 		meter.watch(myId, stream)
 	}
 
-	/** Запрашивает микрофон: вызывать по нажатию, иначе iOS не будет играть входящий звук. */
-	static async open(signaling: VoiceSignaling, myId: string): Promise<VoiceMesh> {
-		// До первого await: тут ещё идёт обработка тапа, и iOS даёт запустить AudioContext.
+	/**
+	 * Запрашивает микрофон: вызывать по нажатию, иначе iOS не будет играть входящий звук.
+	 * По той же причине `audio` создают и запускают ещё в обработчике нажатия (см. joinVoice).
+	 */
+	static async open(signaling: VoiceSignaling, myId: string, audio: AudioContext): Promise<VoiceMesh> {
 		let mesh: VoiceMesh | undefined
-		const meter = new SpeakingMeter((speaking) => mesh?.onSpeaking(speaking))
+		const meter = new SpeakingMeter(audio, (speaking) => mesh?.onSpeaking(speaking))
 
 		try {
 			const stream = await navigator.mediaDevices.getUserMedia({

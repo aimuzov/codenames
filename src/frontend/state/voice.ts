@@ -47,7 +47,7 @@ export function speakerMarks(
 ): SpeakerMark[] {
 	return players
 		.filter((p) => p.team === team && speaking.has(p.id))
-		.map((p) => ({ id: p.id, letter: p.role === 'spymaster' ? 'К' : (p.name.trim()[0] ?? '?').toUpperCase() }))
+		.map((p) => ({ id: p.id, letter: p.role === 'spymaster' ? 'К' : ([...p.name.trim()][0] ?? '?').toUpperCase() }))
 }
 
 function syncMesh() {
@@ -73,10 +73,16 @@ export async function joinVoice() {
 
 	voiceJoiningAtom.set(true)
 
+	// Индикатору говорящих нужен AudioContext, а iOS запускает его только из самого нажатия:
+	// после первого await (загрузки модуля меша) жест уже потерян.
+	const audio = new AudioContext()
+
+	void audio.resume().catch(() => {})
+
 	try {
 		const { VoiceMesh } = await import('#frontend/voice/mesh.ts')
 
-		const opened = await VoiceMesh.open(signaling, myIdAtom())
+		const opened = await VoiceMesh.open(signaling, myIdAtom(), audio)
 
 		// Сессия закончилась, пока висел запрос разрешения: слушать нас уже некому, кнопок
 		// тоже нет, поэтому микрофон отпускаем сразу.
@@ -90,6 +96,7 @@ export async function joinVoice() {
 		mesh.onSpeaking = (speaking) => speakingAtom.set(speaking)
 		meshSignaling = signaling
 	} catch {
+		void audio.close().catch(() => {})
 		toast.error('Нет доступа к микрофону', { description: 'Разрешите его в настройках браузера' })
 
 		return
