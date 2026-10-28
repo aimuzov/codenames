@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.7.0](https://github.com/aimuzov/codenames/compare/v1.6.0...v1.7.0) (2026-10-28)
+
+
+### Features
+
+* **relay:** invite players to an online room by link ([2f7fcde](https://github.com/aimuzov/codenames/commit/2f7fcde8c7ad2930089b224006c1f429a341173b))
+* **relay:** invite players to an online room by link ([17062bc](https://github.com/aimuzov/codenames/commit/17062bccea7ec3050c0314d03c18942d8e5aa88e))
+* **voice:** show who is speaking in the score chips ([3cf3185](https://github.com/aimuzov/codenames/commit/3cf318587b7730bdacf5111c2b8555cb99b40b6f))
+* **voice:** show who is speaking in the score chips ([d3eef89](https://github.com/aimuzov/codenames/commit/d3eef89b655c5c6376d16260b5fcb49c1bc46ff6))
+
+
+### Bug Fixes
+
+* **relay:** add a copy button, accept pasted invite links, skip finished saves ([dd5dbb4](https://github.com/aimuzov/codenames/commit/dd5dbb402127d62b6ec239cb95a9103bf4e56ebb))
+* **voice:** release the join lock when the audio context can't be created ([9d1d559](https://github.com/aimuzov/codenames/commit/9d1d55974353d652b39deb1f4b90379cfc38f609))
+* **voice:** start the audio context within the tap and keep emoji initials whole ([66afbf6](https://github.com/aimuzov/codenames/commit/66afbf66d0dfbada7c3c072953d815f916e5dcc3))
+
 ## [1.6.0](https://github.com/aimuzov/codenames/compare/v1.5.3...v1.6.0) (2026-10-27)
 
 
