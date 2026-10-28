@@ -7,9 +7,9 @@ export type PlayerInfo = {
 	team: Team
 	role: Role
 	connected: boolean
-	/** In the voice chat: the mesh connects only to players who have this set. */
+	/** В голосовом чате: меш соединяется только с теми игроками, у кого это выставлено. */
 	voice?: boolean
-	/** Mic off, by hand or by the spymaster auto-mute. */
+	/** Микрофон выключен — вручную или автомьютом капитана. */
 	muted?: boolean
 }
 

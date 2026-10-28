@@ -44,7 +44,7 @@ async function joinRoom(guest: Page, code: string) {
 
 type VoiceStat = { id: string; state: RTCPeerConnectionState; receiving: boolean }
 
-/** Voice mesh connections of a page, via the e2e hook in state/voice.ts. */
+/** Соединения голосового меша на странице, через e2e-хук в state/voice.ts. */
 function voiceStats(page: Page): Promise<VoiceStat[]> {
 	return page.evaluate(() => (window as unknown as { __e2eVoice: () => VoiceStat[] }).__e2eVoice())
 }
@@ -144,7 +144,7 @@ test.describe('онлайн-режим (релей)', () => {
 			await host!.getByRole('button', { name: 'Войти в голосовой чат' }).click()
 			await guest!.getByRole('button', { name: 'Войти в голосовой чат' }).click()
 
-			// Each side hears the other: the connection is up and the remote track is attached.
+			// Каждая сторона слышит другую: соединение поднято и удалённый трек подключён.
 			for (const page of [host!, guest!]) {
 				await expect
 					.poll(() => voiceStats(page), { timeout: 20_000 })

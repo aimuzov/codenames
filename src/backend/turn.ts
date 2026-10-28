@@ -3,17 +3,17 @@ import { createHmac } from 'node:crypto'
 import type { IceServer } from '#shared/relay-protocol.ts'
 
 /**
- * ICE servers for the voice chat. TURN credentials follow coturn's
- * `use-auth-secret` scheme: the username carries its own expiry, the password
- * is an HMAC of it, so coturn checks them with the shared secret alone and
- * the relay keeps no credential store.
+ * ICE-серверы для голосового чата. TURN-доступы устроены по схеме coturn
+ * `use-auth-secret`: в имени пользователя зашит срок действия, а пароль —
+ * HMAC от имени, поэтому coturn проверяет их одним общим секретом,
+ * и хранилища доступов у релея нет.
  */
 
 const TTL_S = 24 * 60 * 60
 
 export type TurnConfig = {
 	secret: string | undefined
-	/** Comma-separated `turn:` URLs. */
+	/** `turn:`-адреса через запятую. */
 	urls: string | undefined
 	stun: string
 }
@@ -29,7 +29,7 @@ export function turnConfigFromEnv(env: NodeJS.ProcessEnv = process.env): TurnCon
 export function iceServers(config: TurnConfig, id: string, now = Date.now()): IceServer[] {
 	const servers: IceServer[] = [{ urls: config.stun }]
 
-	// Without a secret the relay runs locally or in e2e: STUN is enough there.
+	// Без секрета релей запущен локально или в e2e: там хватает STUN.
 	if (!config.secret || !config.urls) return servers
 
 	const username = `${Math.floor(now / 1000) + TTL_S}:${id}`

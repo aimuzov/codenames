@@ -16,7 +16,7 @@
 	} from '#frontend/state/voice.ts'
 </script>
 
-<!-- Voice chat buttons for a top bar; online rooms only, the QR mode has no voice. -->
+<!-- Кнопки голосового чата для верхней панели. Только онлайн-комнаты: в QR-режиме голоса нет. -->
 {#if $voiceSignalingAtom}
 	{#if $voiceOnAtom}
 		<Button

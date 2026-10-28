@@ -6,13 +6,13 @@ type RelayIn = Envelope<ClientMessage | HostMessage>
 type RelayOut = EnvelopeOut<ClientMessage | HostMessage>
 
 /**
- * Voice chat signaling over the same relay socket. Only the relay transport has it: the QR
- * mode has no server to route through, and its players sit next to each other anyway.
+ * Сигналинг голосового чата поверх того же сокета релея. Он есть только у транспорта релея:
+ * в QR-режиме нет сервера, через который можно передавать сигналы, да и игроки там сидят рядом.
  */
 export type VoiceSignaling = {
 	send(to: string, data: unknown): void
 	onSignal(cb: (from: string, data: unknown) => void): () => void
-	/** The latest servers from the relay; they come with every (re)join. */
+	/** Последние серверы от релея, они приходят при каждом входе (и перевходе). */
 	readonly iceServers: IceServer[]
 }
 
@@ -25,7 +25,7 @@ class RelayVoice implements VoiceSignaling {
 		this.socket = socket
 	}
 
-	/** Takes the envelopes meant for voice; false means the message is someone else's. */
+	/** Забирает конверты, адресованные голосу; `false` значит, что сообщение чужое. */
 	handle(msg: RelayOut): boolean {
 		if (msg.t === 'ice') this.iceServers = msg.servers
 		else if (msg.t === 'voice') for (const cb of this.cbs) cb(msg.from, msg.data)

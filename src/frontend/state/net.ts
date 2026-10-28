@@ -79,7 +79,7 @@ export const roomCodeAtom = atom<string>('')
 let hub: HostTransport | null = null
 let guest: GuestTransport | null = null
 
-/** Voice signaling of the current relay transport; null in the QR mode and outside a session. */
+/** Голосовой сигналинг текущего транспорта релея; `null` в QR-режиме и вне сессии. */
 export const voiceSignalingAtom = atom<VoiceSignaling | null>(null)
 
 function syncVoiceSignaling() {
@@ -319,8 +319,8 @@ function handleClientMessage(connId: string, msg: ClientMessage) {
 function welcomePlayer(connId: string, playerId: string, name: string) {
 	clearRemovalTimer(playerId)
 	bindConn(connId, playerId)
-	// The player may have come back after an app restart with the voice chat off, so until
-	// they announce it again we don't count them in: nobody would answer the mesh's offers.
+	// Игрок мог вернуться после перезапуска приложения уже без голосового чата, поэтому, пока он
+	// не объявит его заново, мы его в чате не считаем: на offer'ы меша никто бы не ответил.
 	const patch = { name: name || 'Игрок', connected: true, voice: false, muted: false }
 
 	if (rosterAtom().some((p) => p.id === playerId)) {
@@ -391,12 +391,12 @@ export function hostReshuffle() {
 	broadcastLobby()
 }
 
-/** Repeated after every `hello`: the host forgets it on reconnect (see welcomePlayer). */
+/** Повторяем после каждого `hello`: при переподключении хост это забывает (см. welcomePlayer). */
 let myVoice = { on: false, muted: false }
 
 /**
- * Tells the room whether we're in the voice chat and whether the mic is on. The host patches
- * its own roster row; a guest asks the host to, like with `setup`.
+ * Сообщает комнате, в голосовом ли мы чате и включён ли микрофон. Хост сам правит свою строку
+ * в ростере, а гость просит об этом хоста, как и с `setup`.
  */
 export function announceVoice(on: boolean, muted: boolean) {
 	myVoice = { on, muted }
@@ -662,7 +662,7 @@ export function resumeSession() {
 	viewRoleAtom.set(snap.role)
 	startedAtom.set(snap.started)
 	// Живых соединений после перезапуска нет ни у кого, кроме нас самих.
-	// The voice chat doesn't survive a restart either: everyone announces it again on reconnect.
+	// Голосовой чат перезапуск тоже не переживает: при переподключении каждый объявит его заново.
 	rosterAtom.set(snap.roster.map((p) => ({ ...p, connected: p.id === snap.id, voice: false, muted: false })))
 
 	if (snap.mode === 'host') {

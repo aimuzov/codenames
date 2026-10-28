@@ -1,20 +1,20 @@
 import type { VoiceSignaling } from '#frontend/transport/ws-relay.ts'
 
 /**
- * Voice chat mesh: an RTCPeerConnection per other participant, audio only.
- * The impolite side (larger id) makes the first offer. Later ones, from an ICE
- * restart, may come from both sides at once, so negotiation follows the
- * "perfect negotiation" pattern: the polite side rolls back its own offer,
- * the impolite one ignores the colliding offer.
+ * Меш голосового чата: по RTCPeerConnection на каждого другого участника, только звук.
+ * Первый offer делает невежливая сторона (у кого id больше). Последующие, от ICE restart,
+ * могут прийти с обеих сторон разом, поэтому согласование идёт по паттерну
+ * "perfect negotiation": вежливая сторона откатывает свой offer,
+ * невежливая игнорирует встречный.
  *
- * Every mesh gets its own `sid`. A peer that left the voice chat and came back
- * is a new session, and whatever its old connection still sends must not reach
- * the new one.
+ * У каждого меша свой `sid`. Пир, который вышел из голосового чата и вернулся, —
+ * это новая сессия, и всё, что ещё шлёт его старое соединение, не должно попасть
+ * в новое.
  */
 
 type Signal = {
 	sid: string
-	/** The receiver's sid as the sender knows it; a mismatch means the signal is stale. */
+	/** sid получателя, каким его знает отправитель; не совпал — значит, сигнал устарел. */
 	rsid?: string
 	description?: RTCSessionDescriptionInit
 	candidate?: RTCIceCandidateInit
@@ -27,20 +27,20 @@ type Peer = {
 	makingOffer: boolean
 	ignoreOffer: boolean
 	answerPending: boolean
-	/** Signals are applied one by one: an await in the middle of one must not let the next in. */
+	/** Сигналы применяем по одному: await посреди одного не должен пропустить следующий. */
 	queue: Promise<void>
 	remoteSid?: string
-	/** When a peer was created by its own signal rather than by the roster (see sync). */
+	/** Когда пир создан его собственным сигналом, а не ростером (см. sync). */
 	bornAt: number
 }
 
 const FALLBACK_ICE: RTCIceServer[] = [{ urls: 'stun:stun.l.google.com:19302' }]
 
 /**
- * An offer can outrun the roster: it goes to us straight through the relay,
- * while news that the sender joined the chat takes a detour through the host.
- * A fresh peer missing from the roster is kept for this long, otherwise sync
- * would hang up before the roster catches up.
+ * Offer может обогнать ростер: он идёт к нам напрямую через релей,
+ * а новость о том, что отправитель вошёл в чат, — в обход, через хост.
+ * Свежий пир, которого нет в ростере, держим вот столько, иначе sync
+ * повесит трубку раньше, чем ростер догонит.
  */
 const ROSTER_GRACE_MS = 10_000
 
@@ -61,7 +61,7 @@ export class VoiceMesh {
 		this.off = signaling.onSignal((from, data) => void this.onSignal(from, data as Signal))
 	}
 
-	/** Asks for the mic: call it from a tap, otherwise iOS won't play the incoming audio. */
+	/** Запрашивает микрофон: вызывать по нажатию, иначе iOS не будет играть входящий звук. */
 	static async open(signaling: VoiceSignaling, myId: string): Promise<VoiceMesh> {
 		const stream = await navigator.mediaDevices.getUserMedia({
 			audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
@@ -74,7 +74,7 @@ export class VoiceMesh {
 		for (const track of this.stream.getAudioTracks()) track.enabled = !muted
 	}
 
-	/** Connects to everyone in `ids` and hangs up on the rest. */
+	/** Соединяется со всеми из `ids`, а с остальными кладёт трубку. */
 	sync(ids: string[]) {
 		this.wanted = ids
 		const wanted = new Set(ids.filter((id) => id !== this.myId))
@@ -84,7 +84,7 @@ export class VoiceMesh {
 
 		for (const [id, peer] of this.peers) {
 			if (wanted.has(id)) {
-				peer.bornAt = 0 // the roster has caught up: leaving the chat now hangs up at once
+				peer.bornAt = 0 // ростер догнал: теперь выход из чата сразу кладёт трубку
 
 				continue
 			}
@@ -93,7 +93,7 @@ export class VoiceMesh {
 			else graceLeft = true
 		}
 
-		// The roster may never change again, so look once more when the grace runs out.
+		// Ростер может больше и не поменяться, поэтому, когда отсрочка выйдет, смотрим ещё раз.
 		if (graceLeft && this.graceTimer === null) {
 			this.graceTimer = setTimeout(() => {
 				this.graceTimer = null
@@ -112,7 +112,7 @@ export class VoiceMesh {
 		for (const track of this.stream.getTracks()) track.stop()
 	}
 
-	/** For e2e: what each connection looks like right now. */
+	/** Для e2e: в каком состоянии сейчас каждое соединение. */
 	stats() {
 		return [...this.peers].map(([id, { pc, audio }]) => ({
 			id,
@@ -145,9 +145,9 @@ export class VoiceMesh {
 
 		this.peers.set(id, peer)
 
-		// Only the impolite side starts the call: if both offered at once, the candidates of the
-		// ignored offer get lost and the link can hang in 'new'. The polite side puts its mic
-		// into the incoming transceiver instead (see apply).
+		// Звонок начинает только невежливая сторона: если offer сделают обе разом, кандидаты
+		// проигнорированного offer'а теряются, и связь может зависнуть в 'new'. Вежливая сторона
+		// вместо этого кладёт свой микрофон во входящий трансивер (см. apply).
 		if (!peer.polite) for (const track of this.stream.getAudioTracks()) pc.addTrack(track, this.stream)
 
 		pc.ontrack = ({ track, streams }) => {
@@ -165,14 +165,14 @@ export class VoiceMesh {
 				await pc.setLocalDescription()
 				this.send(id, { description: pc.localDescription!.toJSON() })
 			} catch {
-				// The connection was closed mid-negotiation: nothing to send any more.
+				// Соединение закрыли посреди согласования: отправлять больше нечего.
 			} finally {
 				peer.makingOffer = false
 			}
 		}
 
-		// A network change (Wi-Fi to cellular) breaks the ICE path; a restart finds a new one
-		// without tearing down the call.
+		// Смена сети (с Wi-Fi на мобильную) ломает ICE-маршрут; restart находит новый,
+		// не обрывая звонок.
 		pc.onconnectionstatechange = () => {
 			if (pc.connectionState === 'failed') pc.restartIce()
 		}
@@ -200,7 +200,7 @@ export class VoiceMesh {
 
 		let peer = this.peers.get(from)
 
-		// The peer rejoined the chat: its old connection is dead, start over with the new one.
+		// Пир перезашёл в чат: старое соединение мертво, начинаем заново с новым.
 		if (peer?.remoteSid !== undefined && peer.remoteSid !== signal.sid) {
 			this.hangUp(from)
 			peer = undefined
@@ -212,7 +212,7 @@ export class VoiceMesh {
 		target.queue = target.queue.then(() => this.apply(from, target, signal))
 	}
 
-	/** Answers with our own audio: the offer brought a transceiver, it only lacks our track. */
+	/** Отвечает нашим звуком: трансивер пришёл с offer'ом, в нём не хватает только нашего трека. */
 	private async attachMic(pc: RTCPeerConnection) {
 		const [track] = this.stream.getAudioTracks()
 		const transceiver = pc.getTransceivers().find((t) => t.receiver.track.kind === 'audio')
@@ -249,8 +249,8 @@ export class VoiceMesh {
 				await pc.addIceCandidate(signal.candidate)
 			}
 		} catch {
-			// Candidates of an ignored offer are bound to fail. Anything else is a hiccup that
-			// perfect negotiation gets over by itself, and a dead ICE path ends in restartIce.
+			// Кандидаты проигнорированного offer'а обязательно упадут. Всё остальное — заминка,
+			// которую perfect negotiation переживёт сам, а мёртвый ICE-маршрут закончится restartIce.
 			peer.answerPending = false
 		}
 	}
