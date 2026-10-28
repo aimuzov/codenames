@@ -87,6 +87,28 @@ test.describe('онлайн-режим (релей)', () => {
 		}
 	})
 
+	test('вход по ссылке-приглашению из QR хоста', async ({ browser }) => {
+		const { ctxs, pages } = await openPeers(browser, 2)
+		const [host, guest] = pages
+
+		try {
+			const code = await hostRoom(host!)
+			// В QR лежит ссылка, а не голый код: её откроет и системная камера.
+			const invite = new URL((await host!.getByTestId('signal-out').textContent()) ?? '')
+
+			expect(invite.searchParams.get('room')).toBe(code)
+
+			await guest!.goto(invite.pathname + invite.search)
+			await guest!.getByRole('button', { name: `Войти в комнату ${code}` }).click()
+			await expect(guest!.getByText('Подключено ✓')).toBeVisible({ timeout: 20_000 })
+			await expect(host!.getByRole('listitem')).toHaveCount(2)
+			// Параметр из адреса убран: перезагрузка не войдёт в комнату ещё раз.
+			expect(new URL(guest!.url()).searchParams.has('room')).toBe(false)
+		} finally {
+			await Promise.all(ctxs.map((c) => c.close()))
+		}
+	})
+
 	test('уснувший хост возвращается в свою комнату — гости остаются на местах', async ({ browser }) => {
 		const { ctxs, pages } = await openPeers(browser, 2)
 		const [host, guest] = pages

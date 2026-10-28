@@ -33,8 +33,8 @@
 	} from '#frontend/state/net.ts'
 	import { randomSetup, teamHasSpymaster } from '#frontend/state/roster.ts'
 	import { myRoleAtom, myTeamAtom } from '#frontend/state/session.ts'
-	import { goBack, joinModeAtom } from '#frontend/state/ui.ts'
-	import { isRoomCode, normalizeRoomCode } from '#shared/relay-protocol.ts'
+	import { goBack, inviteCodeAtom, joinModeAtom } from '#frontend/state/ui.ts'
+	import { normalizeRoomCode, parseRoomCode } from '#shared/relay-protocol.ts'
 
 	type Stage = 'name' | 'room' | 'scanRoom' | 'offer' | 'scan' | 'setup'
 
@@ -51,7 +51,12 @@
 	let name = $state('')
 	let suggestedName = $state(randomName())
 	let offerCode = $state('')
-	let roomInput = $state('')
+	// Код из ссылки забираем один раз, следующий заход на экран начнётся с чистого.
+	const invited = inviteCodeAtom()
+
+	inviteCodeAtom.set('')
+
+	let roomInput = $state(invited)
 	let codeError = $state('')
 
 	// Новое рукопожатие без потери сессии: id и место у игрока прежние, хост узнает его по ним.
@@ -84,10 +89,11 @@
 	}
 
 	// Онлайн-путь: комната на релее. Дальше канал чинится сам, ходить с камерой не придётся.
+	// Принимает и голый код, и ссылку-приглашение: её же показывает QR хоста.
 	function connectByCode(raw: string) {
-		const code = normalizeRoomCode(raw)
+		const code = parseRoomCode(raw)
 
-		if (!isRoomCode(code)) {
+		if (!code) {
 			codeError = 'Код из 6 символов, например ABC123'
 
 			return
@@ -139,10 +145,17 @@
 					<Dices />
 				</Button>
 			</div>
-			<Button block onclick={() => (stage = 'room')}>
-				<LogIn />
-				Войти по коду
-			</Button>
+			{#if invited}
+				<Button block onclick={() => connectByCode(invited)}>
+					<LogIn />
+					Войти в комнату {invited}
+				</Button>
+			{:else}
+				<Button block onclick={() => (stage = 'room')}>
+					<LogIn />
+					Войти по коду
+				</Button>
+			{/if}
 			<Button variant="ghost" block onclick={() => void connectByQr()}>
 				<QrCodeIcon />
 				Рядом, без интернета
@@ -156,7 +169,7 @@
 				inputmode="text"
 				autocapitalize="characters"
 				placeholder="ABC123"
-				bind:value={() => roomInput, (v) => (roomInput = normalizeRoomCode(v))}
+				bind:value={() => roomInput, (v) => (roomInput = parseRoomCode(v) ?? normalizeRoomCode(v))}
 				onkeydown={(e) => e.key === 'Enter' && connectByCode(roomInput)}
 				{@attach (node) => node.focus()}
 			/>

@@ -23,13 +23,14 @@ import {
 	setIntentSender,
 	viewRoleAtom,
 } from '#frontend/state/session.ts'
-import { goTo, goToJoin } from '#frontend/state/ui.ts'
+import { goTo, goToJoin, inviteCodeAtom } from '#frontend/state/ui.ts'
 import { validateIntent } from '#frontend/state/validate-intent.ts'
 import { HostHub } from '#frontend/transport/host-hub.ts'
 import type { ClientMessage, HostMessage, PlayerInfo } from '#frontend/transport/messages.ts'
 import type { GuestTransport, HostTransport } from '#frontend/transport/types.ts'
 import { GuestConnection } from '#frontend/transport/webrtc.ts'
 import { WsGuestTransport, WsHostTransport, type VoiceSignaling } from '#frontend/transport/ws-relay.ts'
+import { INVITE_PARAM, parseRoomCode } from '#shared/relay-protocol.ts'
 
 /** Игровой id хоста в ростере. Гости вместо него используют {@link deviceId}. */
 export const HOST_ID = 'host'
@@ -581,6 +582,36 @@ export function leaveSession() {
  * в приложение означал бы потерю партии — у хоста вместе с каноном, то есть для всех сразу.
  */
 export const savedSessionAtom = atom<SessionSnapshot | null>(loadSnapshot())
+
+/**
+ * Пришли по ссылке-приглашению (`/?room=ABC234`) -- открываем вход с её кодом. Параметр из адреса
+ * убираем, чтобы перезагрузка не входила заново. Незакрытую партию не перебиваем: на главной
+ * останется "Вернуться в игру".
+ */
+export function consumeInviteLink() {
+	const url = new URL(location.href)
+	const raw = url.searchParams.get(INVITE_PARAM)
+
+	if (raw === null) return
+
+	url.searchParams.delete(INVITE_PARAM)
+	history.replaceState(history.state, '', url)
+
+	const code = parseRoomCode(raw)
+	const saved = savedSessionAtom()
+	const finished = saved?.game?.phase === 'over' || saved?.view?.phase === 'over'
+
+	if (!code || (saved && !finished)) return
+
+	// В доигранную партию возвращаться незачем, её снимок только мешал бы новому входу.
+	if (finished) {
+		clearSnapshot()
+		savedSessionAtom.set(null)
+	}
+
+	inviteCodeAtom.set(code)
+	goToJoin('new')
+}
 
 function saveSession() {
 	if (modeAtom() === 'local') {
