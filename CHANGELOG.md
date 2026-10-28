@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1](https://github.com/aimuzov/codenames/compare/v1.7.0...v1.7.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **deps:** move to infra-site-kit 5.9.1 with the strict Sentry events ([c7d9708](https://github.com/aimuzov/codenames/commit/c7d97085714b87bac7a136f0977d97916f367b19))
+* **deps:** move to infra-site-kit 5.9.1 with the strict Sentry events ([1915da8](https://github.com/aimuzov/codenames/commit/1915da8c85e6f15541cdf260d2c36b0a7e73d7c4))
+
 ## [1.7.0](https://github.com/aimuzov/codenames/compare/v1.6.0...v1.7.0) (2026-10-28)
 
 
