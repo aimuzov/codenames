@@ -44,7 +44,78 @@ const FALLBACK_ICE: RTCIceServer[] = [{ urls: 'stun:stun.l.google.com:19302' }]
  */
 const ROSTER_GRACE_MS = 10_000
 
+/** RMS сигнала 0..1, выше которого человек считается говорящим: тихий фон шумодав и так срежет. */
+const SPEAKING_LEVEL = 0.02
+/** Сколько держать «говорит» после последнего громкого замера: паузы между словами не мигают. */
+const SPEAKING_HOLD_MS = 600
+const LEVEL_POLL_MS = 100
+
+/**
+ * Кто сейчас говорит. Меряем громкость каждого потока у себя, а не шлём флаги по сети:
+ * так ничего не нужно согласовывать, и индикатор не отстаёт от звука.
+ */
+class SpeakingMeter {
+	private readonly ctx = new AudioContext()
+	private readonly sources = new Map<string, { node: MediaStreamAudioSourceNode; analyser: AnalyserNode }>()
+	private readonly lastLoud = new Map<string, number>()
+	private readonly buffer = new Float32Array(512)
+	private readonly timer: ReturnType<typeof setInterval>
+	private speaking = new Set<string>()
+
+	constructor(private readonly onChange: (speaking: ReadonlySet<string>) => void) {
+		// Контекст рождается по тапу «войти в чат», так iOS его и разрешит запустить.
+		void this.ctx.resume().catch(() => {})
+		this.timer = setInterval(() => this.poll(), LEVEL_POLL_MS)
+	}
+
+	watch(id: string, stream: MediaStream) {
+		this.unwatch(id)
+
+		const node = this.ctx.createMediaStreamSource(stream)
+		const analyser = this.ctx.createAnalyser()
+
+		analyser.fftSize = this.buffer.length
+		node.connect(analyser)
+		this.sources.set(id, { node, analyser })
+	}
+
+	unwatch(id: string) {
+		this.sources.get(id)?.node.disconnect()
+		this.sources.delete(id)
+		this.lastLoud.delete(id)
+	}
+
+	close() {
+		clearInterval(this.timer)
+		void this.ctx.close().catch(() => {})
+	}
+
+	private poll() {
+		const now = Date.now()
+		const next = new Set<string>()
+
+		for (const [id, { analyser }] of this.sources) {
+			analyser.getFloatTimeDomainData(this.buffer)
+
+			let sum = 0
+
+			for (const v of this.buffer) sum += v * v
+
+			if (Math.sqrt(sum / this.buffer.length) > SPEAKING_LEVEL) this.lastLoud.set(id, now)
+
+			if (now - (this.lastLoud.get(id) ?? -Infinity) < SPEAKING_HOLD_MS) next.add(id)
+		}
+
+		if (next.size === this.speaking.size && [...next].every((id) => this.speaking.has(id))) return
+
+		this.speaking = next
+		this.onChange(next)
+	}
+}
+
 export class VoiceMesh {
+	/** Вызывается, когда меняется набор говорящих (id из ростера, включая свой). */
+	onSpeaking: (speaking: ReadonlySet<string>) => void = () => {}
 	private readonly sid = crypto.randomUUID()
 	private readonly peers = new Map<string, Peer>()
 	private readonly stream: MediaStream
@@ -53,21 +124,36 @@ export class VoiceMesh {
 	private readonly off: () => void
 	private wanted: string[] = []
 	private graceTimer: ReturnType<typeof setTimeout> | null = null
+	private readonly meter: SpeakingMeter
 
-	private constructor(stream: MediaStream, signaling: VoiceSignaling, myId: string) {
+	private constructor(stream: MediaStream, signaling: VoiceSignaling, myId: string, meter: SpeakingMeter) {
 		this.stream = stream
 		this.signaling = signaling
 		this.myId = myId
+		this.meter = meter
 		this.off = signaling.onSignal((from, data) => void this.onSignal(from, data as Signal))
+		meter.watch(myId, stream)
 	}
 
 	/** Запрашивает микрофон: вызывать по нажатию, иначе iOS не будет играть входящий звук. */
 	static async open(signaling: VoiceSignaling, myId: string): Promise<VoiceMesh> {
-		const stream = await navigator.mediaDevices.getUserMedia({
-			audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-		})
+		// До первого await: тут ещё идёт обработка тапа, и iOS даёт запустить AudioContext.
+		let mesh: VoiceMesh | undefined
+		const meter = new SpeakingMeter((speaking) => mesh?.onSpeaking(speaking))
 
-		return new VoiceMesh(stream, signaling, myId)
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({
+				audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+			})
+
+			mesh = new VoiceMesh(stream, signaling, myId, meter)
+
+			return mesh
+		} catch (error) {
+			meter.close()
+
+			throw error
+		}
 	}
 
 	set muted(muted: boolean) {
@@ -110,6 +196,8 @@ export class VoiceMesh {
 		for (const id of this.peers.keys()) this.hangUp(id)
 
 		for (const track of this.stream.getTracks()) track.stop()
+
+		this.meter.close()
 	}
 
 	/** Для e2e: в каком состоянии сейчас каждое соединение. */
@@ -151,8 +239,11 @@ export class VoiceMesh {
 		if (!peer.polite) for (const track of this.stream.getAudioTracks()) pc.addTrack(track, this.stream)
 
 		pc.ontrack = ({ track, streams }) => {
-			audio.srcObject = streams[0] ?? new MediaStream([track])
+			const stream = streams[0] ?? new MediaStream([track])
+
+			audio.srcObject = stream
 			void audio.play().catch(() => {})
+			this.meter.watch(id, stream)
 		}
 
 		pc.onicecandidate = ({ candidate }) => {
@@ -186,6 +277,7 @@ export class VoiceMesh {
 		if (!peer) return
 
 		this.peers.delete(id)
+		this.meter.unwatch(id)
 		peer.pc.close()
 		peer.audio.srcObject = null
 		peer.audio.remove()

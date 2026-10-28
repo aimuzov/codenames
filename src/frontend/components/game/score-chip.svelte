@@ -1,5 +1,9 @@
 <script lang="ts">
+	import { fade, scale } from 'svelte/transition'
+
 	import type { Team } from '#frontend/game/index.ts'
+	import { rosterAtom } from '#frontend/state/net.ts'
+	import { speakerMarks, speakingAtom } from '#frontend/state/voice.ts'
 
 	type Props = {
 		team: Team
@@ -14,13 +18,31 @@
 	let { team, count, active, mirror = false, onclick }: Props = $props()
 
 	const LABEL: Record<Team, string> = { red: 'Красные', blue: 'Синие' }
+
+	const speakers = $derived(speakerMarks($rosterAtom, $speakingAtom, team))
 </script>
 
 <!-- Чип счёта команды: точка + число оставшихся слов + статус хода. -->
 {#snippet content()}
 	<span class="score-chip__dot"></span>
 	<span class="score-chip__count">{count}</span>
-	<span class="score-chip__status">{LABEL[team]} {active ? 'ходят' : 'ожидают'}</span>
+	<!-- Пока кто-то из команды говорит, вместо статуса хода — кружки говорящих. -->
+	<span class="score-chip__status">
+		{#if speakers.length === 0}
+			<span class="score-chip__status-text" transition:fade={{ duration: 200 }}>
+				{LABEL[team]}
+				{active ? 'ходят' : 'ожидают'}
+			</span>
+		{:else}
+			<span class="score-chip__speakers" transition:fade={{ duration: 200 }} data-testid="speakers-{team}">
+				{#each speakers as speaker (speaker.id)}
+					<span class="score-chip__speaker" transition:scale={{ duration: 200, start: 0.5 }}
+						>{speaker.letter}</span
+					>
+				{/each}
+			</span>
+		{/if}
+	</span>
 {/snippet}
 
 {#if onclick}
@@ -103,8 +125,12 @@
 			line-height: 1;
 		}
 
+		/* Текст и кружки лежат в одной ячейке, чтобы при смене они плавно перетекали друг в друга. */
 		&__status {
+			display: grid;
 			flex: 1;
+			align-items: center;
+			justify-items: end;
 			font-size: 10px;
 			font-weight: 600;
 			line-height: 1;
@@ -115,12 +141,45 @@
 			white-space: nowrap;
 
 			.score-chip--mirror & {
+				justify-items: start;
 				text-align: left;
 			}
 
 			.score-chip--active & {
 				color: inherit;
 				opacity: 0.9;
+			}
+		}
+
+		&__status-text,
+		&__speakers {
+			grid-area: 1 / 1;
+		}
+
+		&__speakers {
+			display: flex;
+			gap: 0.25rem;
+
+			.score-chip--mirror & {
+				flex-direction: row-reverse;
+			}
+		}
+
+		&__speaker {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.125rem;
+			height: 1.125rem;
+			border-radius: 9999px;
+			font-size: 11px;
+			color: var(--team-fg);
+			background: var(--team);
+
+			/* На залитом чипе команды кружок — светлый, иначе он сольётся с фоном. */
+			.score-chip--active & {
+				color: var(--team);
+				background: var(--team-fg);
 			}
 		}
 	}
