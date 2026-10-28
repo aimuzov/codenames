@@ -4,6 +4,7 @@ import { E2E } from '#frontend/lib/e2e.ts'
 import { toast } from '#frontend/lib/toast.ts'
 import { announceVoice, myIdAtom, rosterAtom, voiceSignalingAtom } from '#frontend/state/net.ts'
 import { myRoleAtom, myTeamAtom, viewAtom } from '#frontend/state/session.ts'
+import type { PlayerInfo } from '#frontend/transport/messages.ts'
 import type { VoiceSignaling } from '#frontend/transport/ws-relay.ts'
 import type { VoiceMesh } from '#frontend/voice/mesh.ts'
 
@@ -16,6 +17,8 @@ export const voiceOnAtom = atom(false)
 export const micMutedAtom = atom(false)
 /** `true` от нажатия до получения микрофона: грузится модуль меша, висит запрос разрешения. */
 export const voiceJoiningAtom = atom(false)
+/** Кто из чата сейчас говорит: id из ростера, свой тоже. */
+export const speakingAtom = atom<ReadonlySet<string>>(new Set())
 
 let mesh: VoiceMesh | null = null
 /** Транспорт сигналинга меша: если он сменился, комнаты, которую знал меш, больше нет. */
@@ -29,6 +32,22 @@ type TurnView = { currentTeam: Team; phase: GamePhase } | null
 /** Идёт ли ход команды этого капитана — то время, когда его голоса быть не должно. */
 export function isCaptainTurn(view: TurnView, team: Team, role: Role): boolean {
 	return role === 'spymaster' && !!view && view.phase !== 'over' && view.currentTeam === team
+}
+
+export type SpeakerMark = { id: string; letter: string }
+
+/**
+ * Кружки говорящих для чипа счёта команды. У капитана всегда «К»: по ней сразу видно, что
+ * голос подаёт он, а у игроков — первая буква имени.
+ */
+export function speakerMarks(
+	players: readonly Pick<PlayerInfo, 'id' | 'name' | 'team' | 'role'>[],
+	speaking: ReadonlySet<string>,
+	team: Team,
+): SpeakerMark[] {
+	return players
+		.filter((p) => p.team === team && speaking.has(p.id))
+		.map((p) => ({ id: p.id, letter: p.role === 'spymaster' ? 'К' : ([...p.name.trim()][0] ?? '?').toUpperCase() }))
 }
 
 function syncMesh() {
@@ -54,10 +73,17 @@ export async function joinVoice() {
 
 	voiceJoiningAtom.set(true)
 
+	let audio: AudioContext | undefined
+
 	try {
+		// Индикатору говорящих нужен AudioContext, а iOS запускает его только из самого нажатия:
+		// после первого await (загрузки модуля меша) жест уже потерян.
+		audio = new AudioContext()
+		void audio.resume().catch(() => {})
+
 		const { VoiceMesh } = await import('#frontend/voice/mesh.ts')
 
-		const opened = await VoiceMesh.open(signaling, myIdAtom())
+		const opened = await VoiceMesh.open(signaling, myIdAtom(), audio)
 
 		// Сессия закончилась, пока висел запрос разрешения: слушать нас уже некому, кнопок
 		// тоже нет, поэтому микрофон отпускаем сразу.
@@ -68,8 +94,10 @@ export async function joinVoice() {
 		}
 
 		mesh = opened
+		mesh.onSpeaking = (speaking) => speakingAtom.set(speaking)
 		meshSignaling = signaling
 	} catch {
+		void audio?.close().catch(() => {})
 		toast.error('Нет доступа к микрофону', { description: 'Разрешите его в настройках браузера' })
 
 		return
@@ -92,6 +120,7 @@ export function leaveVoice() {
 	autoMuted = false
 	voiceOnAtom.set(false)
 	micMutedAtom.set(false)
+	speakingAtom.set(new Set())
 
 	if (voiceSignalingAtom()) announceVoice(false, false)
 }
