@@ -30,13 +30,12 @@
 		"ws": "8.22.0"
 	},
 	"devDependencies": {
-		"@aimuzov/infra-site-kit": "github:aimuzov/infra-site-kit#v5.9.1",
+		"@aimuzov/infra-site-kit": "github:aimuzov/infra-site-kit#661bf5760d9fda3c0ba6bd35ddb4cbb4537aa929",
 		"@astrojs/check": "0.9.10",
 		"@astrojs/sitemap": "3.7.4",
 		"@astrojs/svelte": "9.0.1",
 		"@commitlint/cli": "21.0.2",
 		"@commitlint/config-conventional": "21.0.2",
-		"@csstools/postcss-global-data": "4.0.0",
 		"@fontsource-variable/manrope": "5.3.0",
 		"@lucide/svelte": "1.55.0",
 		"@playwright/test": "1.64.0",
@@ -55,8 +54,6 @@
 		"idb-keyval": "6.2.5",
 		"oxlint": "1.87.0",
 		"pako": "2.1.0",
-		"postcss-custom-media": "12.0.3",
-		"postcss-nested": "8.0.1",
 		"prettier": "3.9.9",
 		"qrcode": "1.5.4",
 		"stylelint": "17.16.0",
