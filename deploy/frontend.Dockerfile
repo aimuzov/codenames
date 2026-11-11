@@ -4,7 +4,7 @@
 FROM node:26.11.1-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund --loglevel=error
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund --loglevel=error
 COPY . .
 # .env приходит секретом сборки: переменные нужны на этапе build,
 # но в слоях образа файла не остаётся.
