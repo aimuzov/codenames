@@ -28,8 +28,7 @@ jobs:
       # e2e из infra-site-kit: сборка в Chromium. Браузер кэшируется по версии Playwright,
       # его системные библиотеки ставятся из apt каждый прогон.
       - id: playwright
-        run:
-          echo "version=$(npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >>
+        run: echo "version=$(npm ls @playwright/test --json | jq -r '.dependencies["@playwright/test"].version')" >>
           "$GITHUB_OUTPUT"
         if: steps.verified.outputs.reused != 'true'
       - uses: actions/cache@v4
