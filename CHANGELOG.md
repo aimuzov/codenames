@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/aimuzov/codenames/compare/v1.7.1...v1.8.0) (2026-11-12)
+
+
+### Features
+
+* **deploy:** publish Codenames images in Actions ([#55](https://github.com/aimuzov/codenames/issues/55)) ([9d207df](https://github.com/aimuzov/codenames/commit/9d207df270dbfd6703237ab3a649c52e25f69847))
+
 ## [1.7.1](https://github.com/aimuzov/codenames/compare/v1.7.0...v1.7.1) (2026-10-28)
 
 
